@@ -38,7 +38,7 @@ public class Control {
         openExcel();
     }
 
-    private void openExcel() {
+    private void openExcel() {// 打开excel表格
         try {
             Runtime.getRuntime().exec("cmd /c start " + mNew.getUrl());
         } catch (IOException e) {
