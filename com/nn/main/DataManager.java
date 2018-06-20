@@ -1,11 +1,12 @@
 package com.nn.main;
 
-import org.xml.sax.SAXException;
-
-import javax.xml.parsers.ParserConfigurationException;
-import java.io.IOException;
-import java.sql.*;
-
+import javafx.application.Application;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.scene.image.Image;
+import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 /**
  * 测试库存查找
  * 创建日期 2018.5.4
@@ -14,12 +15,22 @@ import java.sql.*;
  * @author 徐世宁
  */
 
-public class DataManager {
+public class DataManager extends Application {
+    public static Stage mStage;
     public static void main(String[] args) {
-        try {
-            new Control();
-        } catch (IOException | SQLException | ParserConfigurationException | SAXException | ClassNotFoundException e) {
-            e.printStackTrace();
-        }
+        launch(args);
+    }
+
+    @Override
+    public void start(Stage primaryStage) throws Exception {
+        mStage = primaryStage;
+        Parent root = FXMLLoader.load(getClass().getResource("/com/nn/layout/main_layout.fxml"));
+        Scene scene = new Scene(root, 360, 127);
+        scene.setFill(null);
+        primaryStage.setScene(scene);
+        primaryStage.getIcons().add(new Image("语文.png"));
+        primaryStage.initStyle(StageStyle.TRANSPARENT);
+        primaryStage.show();
+
     }
 }

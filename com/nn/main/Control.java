@@ -24,8 +24,8 @@ public class Control {
 
     private NnConfiguration mNnConfiguration;// 配置信息
 
-    public Control() throws IOException, SQLException, SAXException, ParserConfigurationException, ClassNotFoundException {
-        nnInit();// 初始化
+    public Control(String news) throws IOException, SQLException, SAXException, ParserConfigurationException, ClassNotFoundException {
+        nnInit(news);// 初始化
         start();// 开始查找数据
         try {
             mNew.output();//将数据写回excel表格
@@ -35,7 +35,7 @@ public class Control {
         }finally {
             mNew.close();
         }
-        openExcel();
+        //openExcel();
     }
 
     private void openExcel() {// 打开excel表格
@@ -71,7 +71,7 @@ public class Control {
         try {
             double quality = 0;
             Vector<String> stockInfo = new Vector<>();
-            ResultSet resultHistory = mHistory.getResultSet("select * from nn where sequence = '" + nnNewPolypeptide.getSequence()+"'");
+            ResultSet resultHistory = mHistory.getResultSet("select * from history where sequence = '" + nnNewPolypeptide.getSequence()+"'");
             while (resultHistory.next()) {
                 NnPolypeptide nnHistoryPolypeptide = new NnPolypeptide(resultHistory.getString("orderId"), resultHistory.getString("sequence"));
                 nnHistoryPolypeptide.setMw(resultHistory.getDouble("mw"));
@@ -149,14 +149,16 @@ public class Control {
     }
 
     // 初始化，将历史订单存入数据库中，以及其他一些初始化工作
-    private void nnInit() throws SQLException, ClassNotFoundException, IOException, ParserConfigurationException, SAXException {
+    private void nnInit(String news) throws SQLException, ClassNotFoundException, IOException, ParserConfigurationException, SAXException {
         mNnConfiguration = new NnConfiguration("path.xml");
-        mNew = new NnExcelReader(mNnConfiguration.getString("new"));
-        initHistory();
+        String str = news == null ? mNnConfiguration.getString("new") : news;
+        mNew = new NnExcelReader(news == null ? mNnConfiguration.getString("new") : news);
+        //initHistory();
+        mHistory = new NnAccdbReader(mNnConfiguration.getString("history"));
         mStock = new NnAccdbReader((mNnConfiguration.getString("stock")));
     }
 
-    private void initHistory() throws IOException, SQLException, ClassNotFoundException {
+    /*private void initHistory() throws IOException, SQLException, ClassNotFoundException {
         NnExcelReader history = new NnExcelReader(mNnConfiguration.getString("history"));
         mHistory = new NnAccdbReader("nnns.accdb");
         mHistory.execute("delete from nn");
@@ -177,5 +179,5 @@ public class Control {
             }
         }
         history.close();
-    }
+    }*/
 }

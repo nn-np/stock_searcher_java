@@ -1,0 +1,13 @@
+.bt_close {
+    -fx-background-image: url("/close2.png");
+    -fx-background-size: 20 20;
+    -fx-background-color: rgba(255, 255, 255, 0);
+    -fx-background-position: center center;
+}
+
+.bt_close:hover{
+    -fx-background-image: url("/close.png");
+    -fx-background-size: 20 20;
+    -fx-background-color: rgb(200, 200, 200);
+    -fx-background-position: center center;
+}
