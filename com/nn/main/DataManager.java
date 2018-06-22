@@ -15,7 +15,7 @@ import javafx.stage.StageStyle;
  * @author 徐世宁
  */
 
-public class DataManager extends Application {
+public class DataManager extends Application {// 好了，这个过程就是从git上克隆代码的过程，然后是提交代码
     public static Stage mStage;
     public static void main(String[] args) {
         launch(args);
