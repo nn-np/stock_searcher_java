@@ -30,6 +30,9 @@ public class DataManager extends Application {
         primaryStage.setScene(scene);
         primaryStage.getIcons().add(new Image("语文.png"));
         primaryStage.initStyle(StageStyle.TRANSPARENT);
+
+        NnDragListener.addNnDragListener(primaryStage);// 添加拖动监听
+
         primaryStage.show();
 
     }

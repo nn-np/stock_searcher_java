@@ -11,3 +11,7 @@
     -fx-background-color: rgb(200, 200, 200);
     -fx-background-position: center center;
 }
+
+.label {
+    -fx-background-color: rgba(200, 200, 200, 0);
+}

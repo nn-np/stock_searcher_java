@@ -14,9 +14,10 @@ public class NnPolypeptide {
     private String sequence;// 氨基酸序列
     private double mw;// 分子量
     private double quality;// 需要的质量
+    private String modification;// 修饰
 
     public NnPolypeptide(String orderId, String sequence) {
-        this.orderId = orderId;// 把空字符替换成null
+        this.orderId = orderId;
         this.sequence = sequence;
         purity = mw = quality = 0;
         //this.workNo = workNo;
@@ -27,13 +28,21 @@ public class NnPolypeptide {
         return orderId != null && !orderId.equals("") && sequence != null && purity > -1 && mw > -1 && quality > -1;
     }
 
+    public void setModification(String modification) {
+        this.modification = modification;
+    }
+
+    public String getModification() {
+        return modification;
+    }
+
     public void setMw(String str) {
         if (str == null || str.equals("")) {
             mw = -1;
             return;
         }
         str = str.substring(str.lastIndexOf("/") + 1);
-        System.out.println(str);
+        //System.out.println(str);
         mw = Pattern.compile("[0-9.]+").matcher(str).matches() ? Double.parseDouble(str) : -1;
     }
 
@@ -48,12 +57,12 @@ public class NnPolypeptide {
         }
         str = str.replaceAll("mg", "").replaceAll("g", "")
                 .replaceAll("无", "0").replaceAll(".*-", "").replaceAll(" ", "");
-        System.out.println(str);
+        //System.out.println(str);
         quality = Pattern.compile("[0-9.]*").matcher(str).matches() ? Double.parseDouble(str) : -1;
     }
 
     // 公司库存写的乱七八糟，醉了,只能把不符合规则的库存忽略
-    // 如果格式没问题返回质量，有问题返回0
+    // 如果格式没问题返回质量，有问题返回-1
     public static double getQuality(String str) {
         if (str == null || str.equals("")) {
             return -1;
@@ -73,7 +82,7 @@ public class NnPolypeptide {
         }
         str = str.replaceAll(">", "").replaceAll("%", "")
                 .replaceAll("crude", "1").replaceAll("Crude", "1");
-        System.out.println(str);
+        //System.out.println(str);
         purity = Pattern.compile("[0-9.]+").matcher(str).matches() ? Double.parseDouble(str) : -1;
     }
 

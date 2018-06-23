@@ -7,43 +7,61 @@ import com.nn.data.NnPolypeptide;
 import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;
-import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.Vector;
 
 import static com.nn.data.NnPolypeptide.getQuality;
 
 public class Control {
+    private boolean isContinue = true;
     private NnExcelReader mNew;// 新单（这个是excel）
     private NnAccdbReader mStock;// 库存（下面两个是Access数据库）
     private NnAccdbReader mHistory;// 历史订单
 
+    private NnListener mNnListener;
+
     private NnConfiguration mNnConfiguration;// 配置信息
 
-    public Control(String news) throws IOException, SQLException, SAXException, ParserConfigurationException, ClassNotFoundException {
-        nnInit(news);// 初始化
-        start();// 开始查找数据
+    public Control(String news, NnListener nnListener) {
+        if (nnListener != null) {
+            mNnListener = nnListener;
+        }
+        if (news == null || news.equals("")) {
+            mNnListener.errorInfo("请先选择新单表格！");
+            //mNnListener.complete();
+            return;
+        }
+        new Thread(() -> {
+            try {
+                nnInit(news);// 初始化
+                start();// 开始查找数据
+                outPut();
+            } catch (SQLException | ClassNotFoundException | ParserConfigurationException | IOException | SAXException e) {
+                e.printStackTrace();
+            }
+        }).start();
+        //openExcel();
+    }
+
+    private void outPut() throws IOException {
         try {
             mNew.output();//将数据写回excel表格
         } catch (IOException e) {
             e.printStackTrace();
+            mNnListener.errorInfo("表格被占用，请先关闭表格再尝试！");
             System.out.println("表格被占用，请先关闭文件后尝试！");
-        }finally {
+        } finally {
             mNew.close();
         }
-        //openExcel();
+        mNnListener.complete();
     }
 
-    private void openExcel() {// 打开excel表格
-        try {
-            Runtime.getRuntime().exec("cmd /c start " + mNew.getUrl());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    public void stop() {
+        isContinue = false;
     }
 
     private void start() {
@@ -53,15 +71,20 @@ public class Control {
         }
         int newSize = mNew.getRowSize();
         for (int i = 0; i < newSize; ++i) {
+
+            if (!isContinue) return;// 如果用户取消查找库存，就结束
+
             String orderId = mNew.getCellString(i, 10);
             String sequence = mNew.getCellString(i, 12);
             NnPolypeptide nnNewPolypeptide = new NnPolypeptide(orderId, sequence);
             nnNewPolypeptide.setPurity(mNew.getCellString(i, 15));
             nnNewPolypeptide.setQuality(mNew.getCellString(i, 14));
             nnNewPolypeptide.setMw(mNew.getCellString(i, 17));
+            nnNewPolypeptide.setModification(mNew.getCellString(i, 16));
             if (nnNewPolypeptide.isAvailable()) {// 如果有效
                 findHistory(nnNewPolypeptide, i);// 得到所有的历史订单
             }
+            mNnListener.progress((double) i / newSize);// 进度监听者
         }
     }
 
@@ -71,11 +94,12 @@ public class Control {
         try {
             double quality = 0;
             Vector<String> stockInfo = new Vector<>();
-            ResultSet resultHistory = mHistory.getResultSet("select * from history where sequence = '" + nnNewPolypeptide.getSequence()+"'");
+            ResultSet resultHistory = mHistory.getResultSet("select * from history where sequence = '" + nnNewPolypeptide.getSequence() + "'");
             while (resultHistory.next()) {
                 NnPolypeptide nnHistoryPolypeptide = new NnPolypeptide(resultHistory.getString("orderId"), resultHistory.getString("sequence"));
-                nnHistoryPolypeptide.setMw(resultHistory.getDouble("mw"));
-                nnHistoryPolypeptide.setPurity(resultHistory.getDouble("purity"));
+                nnHistoryPolypeptide.setMw(resultHistory.getString("mw"));
+                nnHistoryPolypeptide.setPurity(resultHistory.getString("purity"));
+                nnHistoryPolypeptide.setModification(resultHistory.getString("modification"));
 
                 int flag = nnHistoryPolypeptide.equalFlg(nnNewPolypeptide);
                 if (flag > 0) {
@@ -106,6 +130,7 @@ public class Control {
 
     /**
      * 将得到的库存信息写回新单excel表格中
+     *
      * @param info     库存信息
      * @param i        需要写入的行数（第几行）
      * @param isEnough （库存量是否足够）
@@ -121,7 +146,7 @@ public class Control {
         while (resultSet.next()) {
             String cause = resultSet.getString("cause");
             String other = resultSet.getString("other");
-            if (cause == null ) {
+            if (cause == null) {
                 String date = resultSet.getString("_date");
                 if (date == null && (other == null || other.equals("已销毁"))) {
                     continue;
@@ -151,14 +176,14 @@ public class Control {
     // 初始化，将历史订单存入数据库中，以及其他一些初始化工作
     private void nnInit(String news) throws SQLException, ClassNotFoundException, IOException, ParserConfigurationException, SAXException {
         mNnConfiguration = new NnConfiguration("path.xml");
-        String str = news == null ? mNnConfiguration.getString("new") : news;
-        mNew = new NnExcelReader(news == null ? mNnConfiguration.getString("new") : news);
+        mNew = new NnExcelReader(news);
         //initHistory();
         mHistory = new NnAccdbReader(mNnConfiguration.getString("history"));
         mStock = new NnAccdbReader((mNnConfiguration.getString("stock")));
     }
+}
 
-    /*private void initHistory() throws IOException, SQLException, ClassNotFoundException {
+/*private void initHistory() throws IOException, SQLException, ClassNotFoundException {
         NnExcelReader history = new NnExcelReader(mNnConfiguration.getString("history"));
         mHistory = new NnAccdbReader("nnns.accdb");
         mHistory.execute("delete from nn");
@@ -180,4 +205,3 @@ public class Control {
         }
         history.close();
     }*/
-}
