@@ -1,5 +1,6 @@
 package com.nn.main;
 
+import com.nn.layout.NnDragListener;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -30,8 +31,10 @@ public class DataManager extends Application {
         primaryStage.setScene(scene);
         primaryStage.getIcons().add(new Image("语文.png"));
         primaryStage.initStyle(StageStyle.TRANSPARENT);
+        //primaryStage.initStyle(StageStyle.UTILITY);
+        //primaryStage.setAlwaysOnTop(true);
 
-        NnDragListener.addNnDragListener(primaryStage);// 添加拖动监听
+        NnDragListener.addNnDragListener(primaryStage,root);// 添加拖动监听
 
         primaryStage.show();
 

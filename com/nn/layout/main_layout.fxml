@@ -12,7 +12,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane fx:id="root" cache="true" maxHeight="127.0" maxWidth="360.0" minHeight="127.0" minWidth="360.0" prefHeight="127.0" prefWidth="360.0" stylesheets="@style.css" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.nn.layout.MainController">
+<AnchorPane fx:id="root" cache="true" maxHeight="127.0" maxWidth="360.0" minHeight="127.0" minWidth="360.0" prefHeight="127.0" prefWidth="360.0" styleClass="main" stylesheets="@style.css" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.nn.layout.MainController">
    <children>
       <VBox prefHeight="200.0" prefWidth="100.0" AnchorPane.bottomAnchor="35.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="25.0">
          <children>

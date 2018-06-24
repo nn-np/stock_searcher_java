@@ -1,3 +1,9 @@
+/*主背景*/
+.main {
+    -fx-border-width: 1;
+    -fx-border-color: rgba(42, 165, 193);
+}
+
 .bt_close {
     -fx-background-image: url("/close2.png");
     -fx-background-size: 20 20;

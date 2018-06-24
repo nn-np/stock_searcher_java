@@ -7,6 +7,8 @@ import com.nn.main.NnListener;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.scene.control.*;
+import javafx.scene.input.Dragboard;
+import javafx.scene.input.TransferMode;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.FileChooser;
 import org.xml.sax.SAXException;
@@ -26,6 +28,7 @@ public class MainController {
     private int isStart = 0;
 
 
+    public AnchorPane root;
     public Button bt_start;
     public ProgressBar progressBar;
     public Label label;
@@ -46,6 +49,36 @@ public class MainController {
                 e.printStackTrace();
             }
             tf_main.setFocusTraversable(false);
+            initDragDrop();
+        });
+    }
+
+    // 支持文件拖拽
+    private void initDragDrop() {
+        root.setOnDragOver(event -> {
+            Dragboard db = event.getDragboard();
+            if (db.hasUrl()) {
+                event.acceptTransferModes(TransferMode.ANY);
+            }
+            event.consume();
+        });
+        root.setOnDragDropped(event -> {
+            Dragboard db = event.getDragboard();
+            if (db.hasUrl()) {
+                String url = db.getUrl().replaceAll("file:/", "");
+                System.out.println(url);
+                String str = url.substring(url.lastIndexOf('.') + 1);
+                if (str.equals("xls") || str.equals("xlsx")) {
+                    tf_main.setText(url);
+                    news = url;
+                } else {
+                    tf_main.setText("无效！");
+                    news = null;
+                }
+                event.acceptTransferModes(TransferMode.ANY);
+            }
+            event.setDropCompleted(true);
+            event.consume();
         });
     }
 
@@ -54,7 +87,7 @@ public class MainController {
         toStop();
 
         FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("打开新单文件");
+        fileChooser.setTitle("打开新单表格");
         FileChooser.ExtensionFilter extensionFilter = new FileChooser.ExtensionFilter("Excel 文件(.xls .xlsx)", "*.xls", "*.xlsx");
         fileChooser.getExtensionFilters().add(extensionFilter);
 
@@ -104,7 +137,7 @@ public class MainController {
     }
 
     private void toOpenTable() {// 打开excel表格
-        System.out.println("cmd /c start " + news);
+        //System.out.println("cmd /c start " + news);
         try {
             Runtime.getRuntime().exec("cmd /c start " + news);
         } catch (IOException e) {
@@ -124,6 +157,8 @@ public class MainController {
     }
 
     private void toStop() {
+        tf_main.setText(null);
+        news = null;
         label.setVisible(false);
         progressBar.setVisible(false);
         bt_select.setVisible(true);
