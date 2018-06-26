@@ -1,7 +1,12 @@
 /*主背景*/
 .main {
     -fx-border-width: 1;
-    -fx-border-color: rgba(42, 165, 193);
+    -fx-border-color: rgb(24, 116, 205);
+}
+
+.main_pop {
+    -fx-border-width: 1;
+    -fx-border-color: rgb(0, 178, 238);
 }
 
 .bt_close {

@@ -1,5 +1,6 @@
 package com.nn.main;
 
+import com.nn.layout.MainController;
 import com.nn.layout.NnDragListener;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -17,22 +18,28 @@ import javafx.stage.StageStyle;
  */
 
 public class DataManager extends Application {
-    public static Stage mStage;
     public static void main(String[] args) {
         launch(args);
     }
 
     @Override
     public void start(Stage primaryStage) throws Exception {
-        mStage = primaryStage;
-        Parent root = FXMLLoader.load(getClass().getResource("/com/nn/layout/main_layout.fxml"));
+        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/com/nn/layout/main_layout.fxml"));
+
+        //Parent root = FXMLLoader.load(getClass().getResource("/com/nn/layout/main_layout.fxml"));
+
+        Parent root = fxmlLoader.load();
+
+        MainController controller = fxmlLoader.getController();
+        controller.setStage(primaryStage);
+
         Scene scene = new Scene(root, 360, 127);
         scene.setFill(null);
         primaryStage.setScene(scene);
         primaryStage.getIcons().add(new Image("语文.png"));
         primaryStage.initStyle(StageStyle.TRANSPARENT);
         //primaryStage.initStyle(StageStyle.UTILITY);
-        //primaryStage.setAlwaysOnTop(true);
+        primaryStage.setAlwaysOnTop(true);
 
         NnDragListener.addNnDragListener(primaryStage,root);// 添加拖动监听
 

@@ -6,26 +6,32 @@ import com.nn.main.Control;
 import com.nn.main.NnListener;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.FileChooser;
-import org.xml.sax.SAXException;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 
-import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
 import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import static com.nn.main.DataManager.mStage;
 
 public class MainController {
     private NnAccdbReader mConfigurationReader;
     private String news = null;
     private Control mControl;
     private int isStart = 0;
+
+    private Stage mStage;
 
 
     public AnchorPane root;
@@ -51,6 +57,10 @@ public class MainController {
             tf_main.setFocusTraversable(false);
             initDragDrop();
         });
+    }
+
+    public void setStage(Stage stage) {
+        mStage = stage;
     }
 
     // 支持文件拖拽
@@ -201,11 +211,16 @@ public class MainController {
             System.out.println(info);
             Platform.runLater(()->{
                 //tf_main.setText(info);
-                Alert alert = new Alert(Alert.AlertType.ERROR);
+                /*Alert alert = new Alert(Alert.AlertType.ERROR);
                 alert.setTitle("错误!");
                 alert.setHeaderText(info);
-                alert.show();
+                alert.show();*/
                 toStop();
+                try {
+                    showInfo("错误！！", info);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             });
         }
 
@@ -213,6 +228,29 @@ public class MainController {
         public void complete() {
             Platform.runLater(MainController.this::toComplete);
         }
+    }
+
+    private void showInfo(String s, String info) throws IOException {
+        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/com/nn/layout/pop_layout.fxml"));
+        Parent root = fxmlLoader.load();
+
+        NnPopController popController = fxmlLoader.getController();
+
+        Scene scene = new Scene(root, 320, 100);
+
+        Stage stage = new Stage();
+        popController.setStage(stage);
+        popController.setText(info);
+        popController.setTitle(s);
+
+        stage.initOwner(mStage);
+        stage.setScene(scene);
+        stage.sizeToScene();
+        //stage.getIcons().add(null);
+        stage.initModality(Modality.WINDOW_MODAL);
+        stage.initStyle(StageStyle.TRANSPARENT);
+
+        stage.showAndWait();
     }
 
 }

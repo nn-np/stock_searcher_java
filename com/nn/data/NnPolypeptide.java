@@ -18,7 +18,7 @@ public class NnPolypeptide {
 
     public NnPolypeptide(String orderId, String sequence) {
         this.orderId = orderId;
-        this.sequence = sequence;
+        this.sequence = sequence.trim();
         purity = mw = quality = 0;
         //this.workNo = workNo;
     }
@@ -58,7 +58,7 @@ public class NnPolypeptide {
         str = str.replaceAll("mg", "").replaceAll("g", "")
                 .replaceAll("无", "0").replaceAll(".*-", "").replaceAll(" ", "");
         //System.out.println(str);
-        quality = Pattern.compile("[0-9.]*").matcher(str).matches() ? Double.parseDouble(str) : -1;
+        quality = (Pattern.compile("[0-9.]*").matcher(str).matches() && !str.equals("")) ? Double.parseDouble(str) : -1;
     }
 
     // 公司库存写的乱七八糟，醉了,只能把不符合规则的库存忽略
@@ -67,8 +67,9 @@ public class NnPolypeptide {
         if (str == null || str.equals("")) {
             return -1;
         }
-        return Pattern.compile("[0-9.mg]*").matcher(str).matches() ? Double.parseDouble(str.replaceAll("mg", "").replaceAll("g", "")
-                .replaceAll("无", "0").replaceAll(".*-", "").replaceAll(" ", "")) : -1;
+        str = str.replaceAll("mg", "").replaceAll("g", "")
+                .replaceAll("无", "0").replaceAll(".*-", "").replaceAll(" ", "");
+        return (Pattern.compile("[0-9.mg]*").matcher(str).matches() && !str.equals("")) ? Double.parseDouble(str) : -1;
     }
 
     public void setQuality(double quality) {
@@ -83,7 +84,7 @@ public class NnPolypeptide {
         str = str.replaceAll(">", "").replaceAll("%", "")
                 .replaceAll("crude", "1").replaceAll("Crude", "1");
         //System.out.println(str);
-        purity = Pattern.compile("[0-9.]+").matcher(str).matches() ? Double.parseDouble(str) : -1;
+        purity = (Pattern.compile("[0-9.]+").matcher(str).matches() && !str.equals("")) ? Double.parseDouble(str) : -1;
     }
 
     public void setPurity(double purity) {
