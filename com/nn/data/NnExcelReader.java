@@ -15,6 +15,7 @@ import java.text.SimpleDateFormat;
 public class NnExcelReader {
     private Workbook mBook;
     private String url;
+
     public NnExcelReader(String url) throws IOException {
         this.url = url;
         System.out.println(url);
@@ -54,10 +55,9 @@ public class NnExcelReader {
 
 
     /**
-     *
-     * @param sheetIndex  第几个表格
-     * @param x 第几行
-     * @param y 第几列
+     * @param sheetIndex 第几个表格
+     * @param x          第几行
+     * @param y          第几列
      * @return Cell
      */
     public Cell getCell(int sheetIndex, int x, int y) {
@@ -76,7 +76,7 @@ public class NnExcelReader {
     /**
      * 默认第一个表格
      */
-    public Cell getCell(int x,int y) {
+    public Cell getCell(int x, int y) {
         return getCell(0, x, y);
     }
 
@@ -95,12 +95,13 @@ public class NnExcelReader {
                 return new DecimalFormat("0.000").format(cell.getNumericCellValue());
             case STRING:
                 return cell.getStringCellValue();
-            default: return null;
+            default:
+                return null;
         }
     }
 
     public String getCellString(int x, int y) {
-        return getCellString(0,x, y);
+        return getCellString(0, x, y);
     }
 
     public void setCellValue(int sheetIndex, int x, int y, String value) {

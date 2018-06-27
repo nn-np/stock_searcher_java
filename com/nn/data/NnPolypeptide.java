@@ -17,6 +17,9 @@ public class NnPolypeptide {
     private String modification;// 修饰
 
     public NnPolypeptide(String orderId, String sequence) {
+        if (orderId == null || sequence == null) {
+            return;
+        }
         this.orderId = orderId;
         this.sequence = sequence.trim();
         purity = mw = quality = 0;
@@ -28,8 +31,26 @@ public class NnPolypeptide {
         return orderId != null && !orderId.equals("") && sequence != null && purity > -1 && mw > -1 && quality > -1;
     }
 
-    public void setModification(String modification) {
-        this.modification = modification;
+    public void setModification(String modifications) {
+        modifications = getTrimString(modifications);
+        this.modification = modifications;
+    }
+
+    private String getTrimString(String modification) {
+        if (modification == null) {
+            return "";
+        }
+        char[] buffer = new char[120];
+        int len = modification.length();
+        int t = 0;
+        for (int i = 0; i < len; ++i) {
+            char c = modification.charAt(i);
+            if (c != ' ') {
+                buffer[t] = c;
+                ++t;
+            }
+        }
+        return new String(buffer);
     }
 
     public String getModification() {
@@ -133,7 +154,7 @@ public class NnPolypeptide {
      * @return 3 表示相同但是纯度低，需要除以3，1 表示相同并且纯度高，-1 表示分子量或修饰不同
      */
     public int equalFlg(NnPolypeptide nnPolypeptide) {
-        if ((abs(this.mw - nnPolypeptide.mw) < 1) || (abs(this.mw - nnPolypeptide.mw) - 18 < 1)) {
+        if ((abs(this.mw - nnPolypeptide.mw) < 0.8) || (abs(this.mw - nnPolypeptide.mw) - 18 < 0.8)) {
             if (this.purity < nnPolypeptide.purity) {
                 return 3;
             }

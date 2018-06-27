@@ -39,15 +39,22 @@ public class Control {
             try {
                 nnInit(news);// 初始化
                 start();// 开始查找数据
-                outPut();
+                nnEnd();
             } catch (SQLException | ClassNotFoundException | ParserConfigurationException | IOException | SAXException e) {
+                if (nnListener != null) {
+                    nnListener.errorInfo("未知错误！");
+                }
                 e.printStackTrace();
             }
         }).start();
-        //openExcel();
     }
 
-    private void outPut() throws IOException {
+    private void nnEnd(){
+        mNnListener.complete();
+        outPut();
+    }
+
+    private void outPut(){
         try {
             mNew.output();//将数据写回excel表格
         } catch (IOException e) {
@@ -55,9 +62,12 @@ public class Control {
             mNnListener.errorInfo("表格被占用，请先关闭表格再尝试！");
             System.out.println("表格被占用，请先关闭文件后尝试！");
         } finally {
-            mNew.close();
+            try {
+                mNew.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
-        mNnListener.complete();
     }
 
     public void stop() {
@@ -95,11 +105,18 @@ public class Control {
             double quality = 0;
             Vector<String> stockInfo = new Vector<>();
             ResultSet resultHistory = mHistory.getResultSet("select * from history where sequence = '" + nnNewPolypeptide.getSequence() + "'");
+
+            boolean isHave = false;
+
             while (resultHistory.next()) {
                 NnPolypeptide nnHistoryPolypeptide = new NnPolypeptide(resultHistory.getString("orderId"), resultHistory.getString("sequence"));
                 nnHistoryPolypeptide.setMw(resultHistory.getString("mw"));
                 nnHistoryPolypeptide.setPurity(resultHistory.getString("purity"));
                 nnHistoryPolypeptide.setModification(resultHistory.getString("modification"));
+
+                if (nnNewPolypeptide.getSequence().equals(nnHistoryPolypeptide.getSequence())) {
+                    isHave = true;
+                }
 
                 int flag = nnHistoryPolypeptide.equalFlg(nnNewPolypeptide);
                 if (flag > 0) {
@@ -107,6 +124,13 @@ public class Control {
                 }
 
             }
+
+            if (!isHave) {
+                mHistory.execute("insert into history values ('" + nnNewPolypeptide.getOrderId() + "','" +
+                        nnNewPolypeptide.getSequence() + "','" + nnNewPolypeptide.getPurity() + "','" + nnNewPolypeptide.getModification()
+                        + "','" + nnNewPolypeptide.getMw() + "')");
+            }
+
             if (quality > 0) {
                 StringBuilder str = new StringBuilder();
                 int lens = stockInfo.size();
@@ -118,9 +142,9 @@ public class Control {
                 }
                 System.out.println(str.toString());
                 if (quality >= nnNewPolypeptide.getQuality()) {// 有库存
-                    writeBack(str.toString(), i, true);
+                    writeBack(str.toString(), i, 27);
                 } else {// 库存不足
-                    writeBack(str.toString(), i, false);
+                    writeBack(str.toString(), i, 28);
                 }
             }
         } catch (SQLException e) {
@@ -130,14 +154,12 @@ public class Control {
 
     /**
      * 将得到的库存信息写回新单excel表格中
-     *
-     * @param info     库存信息
-     * @param i        需要写入的行数（第几行）
-     * @param isEnough （库存量是否足够）
+     * @param info 需要写入的信息
+     * @param x 需要写入的位置（行）
+     * @param y 需要写入的位置（列）
      */
-    private void writeBack(String info, int i, boolean isEnough) {
-        int row = isEnough ? 27 : 28;
-        mNew.setCellValue(i, row, info);// TODO 注意，这里还没有写入文件，需要调用output一次性写入文件
+    private void writeBack(String info, int x, int y) {
+        mNew.setCellValue(x, y, info);// TODO 注意，这里还没有写入文件，需要调用output一次性写入文件
     }
 
     private double findStock(String orderId, Vector<String> stockInfo) throws SQLException {

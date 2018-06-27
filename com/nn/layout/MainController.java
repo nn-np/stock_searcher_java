@@ -202,19 +202,20 @@ public class MainController {
         public void progress(double progress) {
             System.out.println(progress);
 
-            Platform.runLater(() -> progressBar.setProgress(progress));
+            double pr = progress * 100;
+            String str = String.format("%.2f", pr);
+
+            Platform.runLater(() -> {
+                progressBar.setProgress(progress);
+                label.setText("正在搜索..." + str + "%");
+            });
 
         }
 
         @Override
         public void errorInfo(String info) {
             System.out.println(info);
-            Platform.runLater(()->{
-                //tf_main.setText(info);
-                /*Alert alert = new Alert(Alert.AlertType.ERROR);
-                alert.setTitle("错误!");
-                alert.setHeaderText(info);
-                alert.show();*/
+            Platform.runLater(() -> {
                 toStop();
                 try {
                     showInfo("错误！！", info);
