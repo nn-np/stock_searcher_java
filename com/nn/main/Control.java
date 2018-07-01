@@ -114,7 +114,8 @@ public class Control {
                 nnHistoryPolypeptide.setPurity(resultHistory.getString("purity"));
                 nnHistoryPolypeptide.setModification(resultHistory.getString("modification"));
 
-                if (nnNewPolypeptide.getSequence().equals(nnHistoryPolypeptide.getSequence())) {
+                // 判断历史订单里是否存在这条新单数据，如果没有就添加
+                if (nnNewPolypeptide.getOrderId().equals(nnHistoryPolypeptide.getOrderId())) {
                     isHave = true;
                 }
 
@@ -168,7 +169,7 @@ public class Control {
         while (resultSet.next()) {
             String cause = resultSet.getString("cause");
             String other = resultSet.getString("other");
-            if (cause == null) {
+            if (cause == null || !cause.equals("")) {
                 String date = resultSet.getString("_date");
                 if (date == null && (other == null || other.equals("已销毁"))) {
                     continue;
@@ -226,4 +227,4 @@ public class Control {
             }
         }
         history.close();
-    }*/
+}*/
