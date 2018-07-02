@@ -169,7 +169,7 @@ public class Control {
         while (resultSet.next()) {
             String cause = resultSet.getString("cause");
             String other = resultSet.getString("other");
-            if (cause == null || !cause.equals("")) {
+            if (cause == null || cause.equals("")) {
                 String date = resultSet.getString("_date");
                 if (date == null && (other == null || other.equals("已销毁"))) {
                     continue;
