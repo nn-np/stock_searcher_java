@@ -1,7 +1,7 @@
 package com.nn.layout;
 
 
-import com.nn.data.NnAccdbReader;
+import com.nn.data.NnProperties;
 import com.nn.main.Control;
 import com.nn.main.NnListener;
 import javafx.application.Platform;
@@ -10,7 +10,6 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.image.Image;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.AnchorPane;
@@ -19,14 +18,14 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
+import javax.xml.stream.XMLStreamException;
 import java.io.File;
 import java.io.IOException;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 
 
 public class MainController {
-    private NnAccdbReader mConfigurationReader;
+    private NnProperties mNnProperties;
+    private OnNnListener mOnNnListener;
     private String news = null;
     private Control mControl;
     private int isStart = 0;
@@ -42,9 +41,11 @@ public class MainController {
     public TextField tf_main;
 
     public MainController() {
+        mOnNnListener = new OnNnListener();
         try {
-            mConfigurationReader = new NnAccdbReader("nnns.accdb");
-        } catch (ClassNotFoundException | SQLException e) {
+            mNnProperties = new NnProperties("nn.xml");
+        } catch (IOException | XMLStreamException e) {
+            mOnNnListener.errorInfo("配置文件读取错误!");
             e.printStackTrace();
         }
 
@@ -66,9 +67,10 @@ public class MainController {
     // 支持文件拖拽
     private void initDragDrop() {
         root.setOnDragOver(event -> {
+            toStop();
             Dragboard db = event.getDragboard();
             if (db.hasUrl()) {
-                event.acceptTransferModes(TransferMode.ANY);
+                event.acceptTransferModes(TransferMode.LINK);
             }
             event.consume();
         });
@@ -82,7 +84,7 @@ public class MainController {
                     tf_main.setText(url);
                     news = url;
                 } else {
-                    tf_main.setText("无效！");
+                    tf_main.setText("文件无效！");
                     news = null;
                 }
                 event.acceptTransferModes(TransferMode.ANY);
@@ -97,19 +99,11 @@ public class MainController {
         toStop();
 
         FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("打开新单表格");
+        fileChooser.setTitle("选择新单表格");
         FileChooser.ExtensionFilter extensionFilter = new FileChooser.ExtensionFilter("Excel 文件(.xls .xlsx)", "*.xls", "*.xlsx");
         fileChooser.getExtensionFilters().add(extensionFilter);
 
-        String paths = null;
-        try {
-            ResultSet resultSet = mConfigurationReader.getResultSet("select * from nn where key = 'history'");
-            if (resultSet.next()) {
-                paths = resultSet.getString("_value");
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        String paths = mNnProperties.getProperty("old_path", null);
 
         if (paths != null) {
             fileChooser.setInitialDirectory(new File(paths));
@@ -119,18 +113,12 @@ public class MainController {
         if (file != null) {
             news = file.getPath();
             tf_main.setText(news);
-        } else {
-            return;
-        }
-
-        try {
-            if (paths == null) {
-                mConfigurationReader.execute("insert into nn values ('history','" + file.getParent() + "')");
-            } else {
-                mConfigurationReader.execute("update nn set key = 'history',_value='" + file.getParent() + "' where key = 'history'");
+            mNnProperties.put("old_path", file.getParent());
+            try {
+                mNnProperties.submit();
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
     }
 
@@ -182,7 +170,7 @@ public class MainController {
         progressBar.setVisible(false);
         bt_select.setVisible(true);
         tf_main.setVisible(true);
-        tf_main.setText("搜索完成，结果已写入表格最后两列！");
+        tf_main.setText("搜索完成，结果已写入表格！");
         bt_start.setText("打开表格");
         isStart = 2;
     }

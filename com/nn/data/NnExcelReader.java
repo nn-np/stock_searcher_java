@@ -62,15 +62,15 @@ public class NnExcelReader {
      */
     public Cell getCell(int sheetIndex, int x, int y) {
         Sheet sheet = mBook.getSheetAt(sheetIndex);
-        int rowSize = sheet.getLastRowNum();
-        if (x > rowSize) {
-            return null;
+        if (sheet == null) {
+            sheet = mBook.createSheet();
         }
         Row row = sheet.getRow(x);
         if (row == null) {
-            return null;
+            row = sheet.createRow(x);
         }
-        return row.getCell(y);
+        Cell cell = row.getCell(y);
+        return cell == null ? row.createCell(y) : cell;
     }
 
     /**
@@ -105,15 +105,36 @@ public class NnExcelReader {
     }
 
     public void setCellValue(int sheetIndex, int x, int y, String value) {
-        Sheet sheet = getSheet(sheetIndex);
-        Row row = sheet.getRow(x);
-        Cell cell = row.createCell(y);
+        //Sheet sheet = getSheet(sheetIndex);
+        //Row row = sheet.getRow(x);
+        //Cell cell = row.createCell(y);
+        Cell cell = createCell(sheetIndex, x, y);
         cell.setCellValue(value);
         // TODO 注意，这里还没有写入文件 调用output一次性写入文件
     }
 
     public void setCellValue(int x, int y, String value) {
         setCellValue(0, x, y, value);
+    }
+
+    public Cell createCell(int sheetIndex, int x, int y) {
+        Sheet sheet = mBook.getSheetAt(sheetIndex);
+        if (sheet == null) {
+            sheet = mBook.createSheet();
+        }
+        Row row = sheet.getRow(x);
+        if (row == null) {
+            row = sheet.createRow(x);
+        }
+        return row.createCell(y);
+    }
+
+    public Cell createCell(int x, int y) {
+        return createCell(0, x, y);
+    }
+
+    public CellStyle createCellStyle() {
+        return mBook.createCellStyle();
     }
 
     // 使用完一定要关闭，好习惯

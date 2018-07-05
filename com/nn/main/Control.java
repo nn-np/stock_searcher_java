@@ -1,14 +1,15 @@
 package com.nn.main;
 
 import com.nn.data.NnAccdbReader;
-import com.nn.data.NnConfiguration;
 import com.nn.data.NnExcelReader;
 import com.nn.data.NnPolypeptide;
-import org.xml.sax.SAXException;
+import com.nn.data.NnProperties;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.FillPatternType;
+import org.apache.poi.ss.usermodel.IndexedColors;
 
-import javax.xml.parsers.ParserConfigurationException;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
+import javax.xml.stream.XMLStreamException;
 import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -24,7 +25,8 @@ public class Control {
 
     private NnListener mNnListener;
 
-    private NnConfiguration mNnConfiguration;// 配置信息
+    //private NnConfiguration mNnConfiguration;// 配置信息
+    private NnProperties mNnProperties;
 
     public Control(String news, NnListener nnListener) {
         if (nnListener != null) {
@@ -32,26 +34,18 @@ public class Control {
         }
         if (news == null || news.equals("")) {
             mNnListener.errorInfo("请先选择新单表格！");
-            //mNnListener.complete();
             return;
         }
         new Thread(() -> {
-            try {
-                nnInit(news);// 初始化
-                start();// 开始查找数据
-                nnEnd();
-            } catch (SQLException | ClassNotFoundException | ParserConfigurationException | IOException | SAXException e) {
-                if (nnListener != null) {
-                    nnListener.errorInfo("未知错误！");
-                }
-                e.printStackTrace();
-            }
+            nnInit(news);// 初始化
+            start();// 开始查找数据
+            nnEnd();
         }).start();
     }
 
     private void nnEnd(){
-        mNnListener.complete();
         outPut();
+        mNnListener.complete();
     }
 
     private void outPut(){
@@ -79,10 +73,16 @@ public class Control {
             System.out.println("空指针！！");
             return;
         }
+
+        mNew.setCellValue(0,11,"库存信息（绿色背景量不足）");
         int newSize = mNew.getRowSize();
         for (int i = 0; i < newSize; ++i) {
 
             if (!isContinue) return;// 如果用户取消查找库存，就结束
+
+            if (i > 0) {
+                mNew.createCell(i, 11);
+            }
 
             String orderId = mNew.getCellString(i, 10);
             String sequence = mNew.getCellString(i, 12);
@@ -143,12 +143,13 @@ public class Control {
                 }
                 System.out.println(str.toString());
                 if (quality >= nnNewPolypeptide.getQuality()) {// 有库存
-                    writeBack(str.toString(), i, 27);
+                    writeBack(str.toString(), i, true);
                 } else {// 库存不足
-                    writeBack(str.toString(), i, 28);
+                    writeBack(str.toString(), i, false);
                 }
             }
         } catch (SQLException e) {
+            mNnListener.errorInfo("库存或历史订单数据库发生错误！");
             e.printStackTrace();
         }
     }
@@ -157,10 +158,20 @@ public class Control {
      * 将得到的库存信息写回新单excel表格中
      * @param info 需要写入的信息
      * @param x 需要写入的位置（行）
-     * @param y 需要写入的位置（列）
+     * @param isEnough 库存是否足够
      */
-    private void writeBack(String info, int x, int y) {
-        mNew.setCellValue(x, y, info);// TODO 注意，这里还没有写入文件，需要调用output一次性写入文件
+    private void writeBack(String info, int x, boolean isEnough) {
+        // TODO 注意，这里还没有写入文件，需要调用output一次性写入文件
+        if (isEnough) {
+            mNew.setCellValue(x, 11, info);
+        } else {
+            CellStyle cellStyle = mNew.createCellStyle();
+            cellStyle.setFillForegroundColor(IndexedColors.SEA_GREEN.getIndex());
+            cellStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+            Cell cell = mNew.getCell(x, 11);
+            cell.setCellValue(info);
+            cell.setCellStyle(cellStyle);
+        }
     }
 
     private double findStock(String orderId, Vector<String> stockInfo) throws SQLException {
@@ -197,34 +208,36 @@ public class Control {
     }
 
     // 初始化，将历史订单存入数据库中，以及其他一些初始化工作
-    private void nnInit(String news) throws SQLException, ClassNotFoundException, IOException, ParserConfigurationException, SAXException {
-        mNnConfiguration = new NnConfiguration("path.xml");
-        mNew = new NnExcelReader(news);
-        //initHistory();
-        mHistory = new NnAccdbReader(mNnConfiguration.getString("history"));
-        mStock = new NnAccdbReader((mNnConfiguration.getString("stock")));
+    private void nnInit(String news){
+        try {
+            mNnProperties = new NnProperties("nn.xml");
+        } catch (IOException | XMLStreamException e) {
+            mNnListener.errorInfo("配置文件读取错误！");
+            e.printStackTrace();
+        }
+        try {
+            mNew = new NnExcelReader(news);
+        } catch (IOException e) {
+            mNnListener.errorInfo("新单文件读取错误！");
+            e.printStackTrace();
+        }
+        try {
+            mHistory = new NnAccdbReader(mNnProperties.getProperty("history","history(new).accdb"));
+        } catch (ClassNotFoundException e) {
+            mNnListener.errorInfo("Access数据库驱动错误！");
+            e.printStackTrace();
+        } catch (SQLException e) {
+            mNnListener.errorInfo("历史订单数据库读取错误！");
+            e.printStackTrace();
+        }
+        try {
+            mStock = new NnAccdbReader((mNnProperties.getProperty("stock","stock.accdb")));
+        } catch (ClassNotFoundException e) {
+            mNnListener.errorInfo("Access数据库驱动错误！");
+            e.printStackTrace();
+        } catch (SQLException e) {
+            mNnListener.errorInfo("库存数据库读取错误！");
+            e.printStackTrace();
+        }
     }
 }
-
-/*private void initHistory() throws IOException, SQLException, ClassNotFoundException {
-        NnExcelReader history = new NnExcelReader(mNnConfiguration.getString("history"));
-        mHistory = new NnAccdbReader("nnns.accdb");
-        mHistory.execute("delete from nn");
-        //mHistory.createTable("nn", new String[]{"orderId", "sequence", "purity", "mw"});
-
-        int historySize = history.getRowSize();
-        for (int i = 0; i < historySize; ++i) {
-            String orderId = history.getCellString(i, 15);
-            String sequence = history.getCellString(i, 6);
-            NnPolypeptide nnPolypeptide = new NnPolypeptide(orderId, sequence);
-            nnPolypeptide.setPurity(history.getCellString(i, 3));
-            nnPolypeptide.setMw(history.getCellString(i, 9));
-            if (nnPolypeptide.isAvailable()) {
-                System.out.println(nnPolypeptide.isAvailable());
-                String sql = "insert into nn values ('" + nnPolypeptide.getOrderId() + "','" + nnPolypeptide.getSequence() +
-                        "','" + nnPolypeptide.getPurity() + "','" + nnPolypeptide.getMw() + "')";
-                mHistory.execute(sql);
-            }
-        }
-        history.close();
-}*/
