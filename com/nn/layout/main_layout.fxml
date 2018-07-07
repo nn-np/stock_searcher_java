@@ -31,7 +31,7 @@
       </VBox>
       <HBox layoutY="100.0" prefHeight="100.0" prefWidth="600.0" AnchorPane.bottomAnchor="35.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="25.0">
          <children>
-            <TextField fx:id="tf_main" promptText="选择新单" HBox.hgrow="ALWAYS">
+            <TextField fx:id="tf_main" promptText="选择或拖动Excel表格到此处" HBox.hgrow="ALWAYS">
                <HBox.margin>
                   <Insets bottom="20.0" left="20.0" right="10.0" top="20.0" />
                </HBox.margin>
