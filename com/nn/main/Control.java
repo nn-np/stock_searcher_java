@@ -28,6 +28,8 @@ public class Control {
     //private NnConfiguration mNnConfiguration;// 配置信息
     private NnProperties mNnProperties;
 
+    private int enoughCount = 0, otherCount = 0;
+
     public Control(String news, NnListener nnListener) {
         if (nnListener != null) {
             mNnListener = nnListener;
@@ -74,7 +76,6 @@ public class Control {
             return;
         }
 
-        mNew.setCellValue(0,11,"库存信息（绿色背景量不足）");
         int newSize = mNew.getRowSize();
         for (int i = 0; i < newSize; ++i) {
 
@@ -96,6 +97,7 @@ public class Control {
             }
             mNnListener.progress((double) i / newSize);// 进度监听者
         }
+        mNew.setCellValue(0, 11, "库存信息：" + enoughCount + "+" + otherCount + "（绿色背景量不足）");
     }
 
     // "orderId", "sequence", "purity", "mw"
@@ -142,11 +144,7 @@ public class Control {
                     }
                 }
                 System.out.println(str.toString());
-                if (quality >= nnNewPolypeptide.getQuality()) {// 有库存
-                    writeBack(str.toString(), i, true);
-                } else {// 库存不足
-                    writeBack(str.toString(), i, false);
-                }
+                writeBack(str.toString(), i, quality >= nnNewPolypeptide.getQuality());
             }
         } catch (SQLException e) {
             mNnListener.errorInfo("库存或历史订单数据库发生错误！");
@@ -164,7 +162,10 @@ public class Control {
         // TODO 注意，这里还没有写入文件，需要调用output一次性写入文件
         if (isEnough) {
             mNew.setCellValue(x, 11, info);
+            ++enoughCount;
         } else {
+            mNew.setCellValue(x, 27, info);
+            ++otherCount;
             CellStyle cellStyle = mNew.createCellStyle();
             cellStyle.setFillForegroundColor(IndexedColors.SEA_GREEN.getIndex());
             cellStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
