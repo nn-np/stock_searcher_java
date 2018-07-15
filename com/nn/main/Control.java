@@ -1,15 +1,13 @@
 package com.nn.main;
 
-import com.nn.data.NnAccdbReader;
-import com.nn.data.NnExcelReader;
-import com.nn.data.NnPolypeptide;
-import com.nn.data.NnProperties;
+import com.nn.data.*;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.FillPatternType;
 import org.apache.poi.ss.usermodel.IndexedColors;
 
 import javax.xml.stream.XMLStreamException;
+import java.io.File;
 import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -55,6 +53,22 @@ public class Control {
             mNnProperties.submit();
         } catch (IOException e) {
             e.printStackTrace();
+        }
+
+        new Thread(this::historyBackup).start();
+    }
+
+    private void historyBackup() {// 定时对历史数据进行备份，以免出现意外毁坏珍贵数据
+        File history = new File(mHistory.getUrl());
+        long hisTime = history.lastModified();
+        File backup = new File("nn_backup/" + history.getName());
+        long backTime = backup.lastModified();
+        if ((backTime + 259200000) < hisTime) {// 如果3天没备份数据
+            try {
+                NnOther.nnBackup(mHistory.getUrl());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 
