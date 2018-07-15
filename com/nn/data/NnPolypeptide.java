@@ -154,7 +154,8 @@ public class NnPolypeptide {
      * @return 3 表示相同但是纯度低，需要除以3，1 表示相同并且纯度高，-1 表示分子量或修饰不同
      */
     public int equalFlg(NnPolypeptide nnPolypeptide) {
-        if ((abs(this.mw - nnPolypeptide.mw) < 0.8) || (abs(this.mw - nnPolypeptide.mw) - 18 < 0.8)) {
+        double d_value = abs(this.mw - nnPolypeptide.mw);
+        if (( d_value < 0.8) || (abs(d_value - 18) < 0.8)) {
             if (this.purity < nnPolypeptide.purity) {
                 return 3;
             }

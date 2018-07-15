@@ -28,7 +28,8 @@ public class Control {
     //private NnConfiguration mNnConfiguration;// 配置信息
     private NnProperties mNnProperties;
 
-    private int enoughCount = 0, otherCount = 0;
+    // 已查到的库存数量：足够和量不足，搜索的条数，搜索的次数
+    private int enoughCount = 0, otherCount = 0, searchedCount, searchedTimes;
 
     public Control(String news, NnListener nnListener) {
         if (nnListener != null) {
@@ -48,6 +49,13 @@ public class Control {
     private void nnEnd(){
         outPut();
         mNnListener.complete();
+        mNnProperties.put("searchedCount", "" + searchedCount);
+        mNnProperties.put("searchedTimes", "" + searchedTimes);
+        try {
+            mNnProperties.submit();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void outPut(){
@@ -76,6 +84,7 @@ public class Control {
             return;
         }
 
+        int count = 0;
         int newSize = mNew.getRowSize();
         for (int i = 0; i < newSize; ++i) {
 
@@ -94,9 +103,11 @@ public class Control {
             nnNewPolypeptide.setModification(mNew.getCellString(i, 16));
             if (nnNewPolypeptide.isAvailable()) {// 如果有效
                 findHistory(nnNewPolypeptide, i);// 得到所有的历史订单
+                ++count;
             }
             mNnListener.progress((double) i / newSize);// 进度监听者
         }
+        searchedCount += count;
         mNew.setCellValue(0, 11, "库存信息：" + enoughCount + "+" + otherCount + "（绿色背景量不足）");
     }
 
@@ -216,6 +227,11 @@ public class Control {
             mNnListener.errorInfo("配置文件读取错误！");
             e.printStackTrace();
         }
+
+        searchedCount = Integer.parseInt(mNnProperties.getProperty("searchedCount", "0"));
+        searchedTimes = Integer.parseInt(mNnProperties.getProperty("searchedTimes", "0"));
+        searchedTimes += 1;
+
         try {
             mNew = new NnExcelReader(news);
         } catch (IOException e) {
