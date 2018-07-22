@@ -11,9 +11,11 @@ import java.io.File;
 import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Vector;
 
-import static com.nn.data.NnPolypeptide.getQuality;
+import static com.nn.data.NnOther.getQuality;
 
 public class Control {
     private boolean isContinue = true;
@@ -23,11 +25,12 @@ public class Control {
 
     private NnListener mNnListener;
 
-    //private NnConfiguration mNnConfiguration;// 配置信息
+    private Vector<NnStockInfo> mStockInfos;
+    private NnStockInfo mNnStockInfo;// 临时库存信息，用于复用
     private NnProperties mNnProperties;
 
     // 已查到的库存数量：足够和量不足，搜索的条数，搜索的次数
-    private int enoughCount = 0, otherCount = 0, searchedCount, searchedTimes;
+    private int otherCount = 0, searchedCount, searchedTimes;
 
     public Control(String news, NnListener nnListener) {
         if (nnListener != null) {
@@ -45,10 +48,15 @@ public class Control {
     }
 
     private void nnEnd(){
+        if (!isContinue) {// 如果用户在查找结束之前取消查找，说明用户不希望改变表格，这里return
+            mNnListener.errorInfo("已取消!");
+            return;
+        }
+        writeBack();
         outPut();
         mNnListener.complete();
-        mNnProperties.put("searchedCount", "" + searchedCount);
-        mNnProperties.put("searchedTimes", "" + searchedTimes);
+        mNnProperties.put("searched_count", "" + searchedCount);
+        mNnProperties.put("searched_times", "" + searchedTimes);
         try {
             mNnProperties.submit();
         } catch (IOException e) {
@@ -93,11 +101,6 @@ public class Control {
     }
 
     private void start() {
-        if (mHistory == null) {
-            System.out.println("空指针！！");
-            return;
-        }
-
         int count = 0;
         int newSize = mNew.getRowSize();
         for (int i = 0; i < newSize; ++i) {
@@ -107,69 +110,65 @@ public class Control {
             if (i > 0) {
                 mNew.createCell(i, 11);
             }
-
-            String orderId = mNew.getCellString(i, 10);
-            String sequence = mNew.getCellString(i, 12);
-            NnPolypeptide nnNewPolypeptide = new NnPolypeptide(orderId, sequence);
-            nnNewPolypeptide.setPurity(mNew.getCellString(i, 15));
-            nnNewPolypeptide.setQuality(mNew.getCellString(i, 14));
-            nnNewPolypeptide.setMw(mNew.getCellString(i, 17));
-            nnNewPolypeptide.setModification(mNew.getCellString(i, 16));
+            NnPolypeptide nnNewPolypeptide = getNnPolypeptideFromExcel(i);
             if (nnNewPolypeptide.isAvailable()) {// 如果有效
-                findHistory(nnNewPolypeptide, i);// 得到所有的历史订单
+                mNnStockInfo = new NnStockInfo(nnNewPolypeptide, i);
+                findHistory();// 得到所有的历史订单
                 ++count;
             }
             mNnListener.progress((double) i / newSize);// 进度监听者
         }
         searchedCount += count;
-        mNew.setCellValue(0, 11, "库存信息：" + enoughCount + "+" + otherCount + "（绿色背景量不足）");
+        mNew.setCellValue(0, 11, "库存信息：" + mStockInfos.size() + "+" + otherCount);
+    }
+
+    // 从excel表获取多肽（NnPolypeptide）对象
+    private NnPolypeptide getNnPolypeptideFromExcel(int i) {
+        String orderId = mNew.getCellString(i, 10);
+        String sequence = mNew.getCellString(i, 12);
+        NnPolypeptide nnNewPolypeptide = new NnPolypeptide(orderId, sequence);
+        nnNewPolypeptide.setPurity(mNew.getCellString(i, 15));
+        nnNewPolypeptide.setQuality(mNew.getCellString(i, 14));
+        nnNewPolypeptide.setMw(mNew.getCellString(i, 17));
+        nnNewPolypeptide.setModification(mNew.getCellString(i, 16));
+        nnNewPolypeptide.setWorkNo(mNew.getCellString(i,0));
+        nnNewPolypeptide.setComments(mNew.getCellString(i, 22));
+        return nnNewPolypeptide;
     }
 
     // "orderId", "sequence", "purity", "mw"
     // 寻找历史订单，一个序列，会有很多的历史订单，注意它们的修饰和分子量是否相同（我的理解，分子量相同或者相差18，则修饰肯定相同）
-    private void findHistory(NnPolypeptide nnNewPolypeptide, int i) {
+    private void findHistory() {
         try {
-            double quality = 0;
-            Vector<String> stockInfo = new Vector<>();
+            NnPolypeptide nnNewPolypeptide = mNnStockInfo.getNnNewPolypeptide();
             ResultSet resultHistory = mHistory.getResultSet("select * from history where sequence = '" + nnNewPolypeptide.getSequence() + "'");
 
             boolean isHave = false;
 
             while (resultHistory.next()) {
-                NnPolypeptide nnHistoryPolypeptide = new NnPolypeptide(resultHistory.getString("orderId"), resultHistory.getString("sequence"));
-                nnHistoryPolypeptide.setMw(resultHistory.getString("mw"));
-                nnHistoryPolypeptide.setPurity(resultHistory.getString("purity"));
-                nnHistoryPolypeptide.setModification(resultHistory.getString("modification"));
+                NnPolypeptide nnHistoryPolypeptide = getNnPolypeptideFromAccdb(resultHistory);
 
-                // 判断历史订单里是否存在这条新单数据，如果没有就添加
+                // 判断历史订单里是否存在这条新单数据，如果有，isHave会为true，将不再添加到数据库
                 if (nnNewPolypeptide.getOrderId().equals(nnHistoryPolypeptide.getOrderId())) {
                     isHave = true;
                 }
 
                 int flag = nnHistoryPolypeptide.equalFlg(nnNewPolypeptide);
                 if (flag > 0) {
-                    quality += (findStock(nnHistoryPolypeptide.getOrderId(), stockInfo) / flag);// 返回获得的库存数量，并且把库存信息保存再stockInfo中
+                    findStock(nnHistoryPolypeptide, flag);
                 }
 
             }
 
             if (!isHave) {
-                mHistory.execute("insert into history values ('" + nnNewPolypeptide.getOrderId() + "','" +
+                String date = new SimpleDateFormat("yyyy/M/d").format(new Date());
+                mHistory.execute("insert into history values ('" + date + "','" + nnNewPolypeptide.getOrderId() + "','" +
                         nnNewPolypeptide.getSequence() + "','" + nnNewPolypeptide.getPurity() + "','" + nnNewPolypeptide.getModification()
-                        + "','" + nnNewPolypeptide.getMw() + "')");
+                        + "','" + nnNewPolypeptide.getMw() + "','" + nnNewPolypeptide.getComments() + "')");
             }
 
-            if (quality > 0) {
-                StringBuilder str = new StringBuilder();
-                int lens = stockInfo.size();
-                for (int is = 0; is < lens; ++is) {
-                    str.append(stockInfo.get(is));
-                    if (lens > 1 && is < lens - 1) {
-                        str.append(" ||  ");
-                    }
-                }
-                System.out.println(str.toString());
-                writeBack(str.toString(), i, quality >= nnNewPolypeptide.getQuality());
+            if (mNnStockInfo.isAvailable()) {
+                mStockInfos.add(mNnStockInfo);
             }
         } catch (SQLException e) {
             mNnListener.errorInfo("库存或历史订单数据库发生错误！");
@@ -177,64 +176,70 @@ public class Control {
         }
     }
 
-    /**
-     * 将得到的库存信息写回新单excel表格中
-     * @param info 需要写入的信息
-     * @param x 需要写入的位置（行）
-     * @param isEnough 库存是否足够
-     */
-    private void writeBack(String info, int x, boolean isEnough) {
-        // TODO 注意，这里还没有写入文件，需要调用output一次性写入文件
-        if (isEnough) {
-            mNew.setCellValue(x, 11, info);
-            ++enoughCount;
-        } else {
-            mNew.setCellValue(x, 27, info);
-            ++otherCount;
-            CellStyle cellStyle = mNew.createCellStyle();
-            cellStyle.setFillForegroundColor(IndexedColors.SEA_GREEN.getIndex());
-            cellStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-            Cell cell = mNew.getCell(x, 11);
-            cell.setCellValue(info);
-            cell.setCellStyle(cellStyle);
-        }
+    // 从Access数据库获取多肽对象
+    private NnPolypeptide getNnPolypeptideFromAccdb(ResultSet resultHistory) throws SQLException {
+        NnPolypeptide nnHistoryPolypeptide = new NnPolypeptide(resultHistory.getString("orderId"), resultHistory.getString("sequence"));
+        nnHistoryPolypeptide.setMw(resultHistory.getString("mw"));
+        nnHistoryPolypeptide.setPurity(resultHistory.getString("purity"));
+        nnHistoryPolypeptide.setModification(resultHistory.getString("modification"));
+        return nnHistoryPolypeptide;
     }
 
-    private double findStock(String orderId, Vector<String> stockInfo) throws SQLException {
+    // todo 修饰不同的区别对待  对比的时候把标点符号去掉
+    // flg是用来计算绝对质量用的，哈哈，发现我创造了很多新词，什么历史订单，绝对质量，希望这个项目没有第二个人维护（逃）
+    // 那么解释一下绝对质量，免得以后懵逼，绝对质量就是如果历史订单纯度不足，除去3之后得到的质量
+    private void findStock(NnPolypeptide nnHistoryPolypeptide, int flg) throws SQLException {
+        String orderId = nnHistoryPolypeptide.getOrderId();
         ResultSet resultSet = mStock.getResultSet("select * from stock where orderId = '" + orderId + "'");
-        double quality = 0;
         while (resultSet.next()) {
             String cause = resultSet.getString("cause");
-            String other = resultSet.getString("other");
             if (cause == null || cause.equals("")) {
                 String date = resultSet.getString("_date");
-                if (date == null && (other == null || other.equals("已销毁"))) {
+                if (date == null) {
                     continue;
                 }
-                double q = getQuality(resultSet.getString("quality"));
-                if (q > 0) {
-                    quality += q;
-                    String stock = orderId + " " + date + " " + q + "mg";
-                    if (!isHave(stockInfo, stock)) {
-                        stockInfo.add(stock);
-                    }
+                double q = getQuality(resultSet.getString("quality").toCharArray());
+                if (q > 0) {// 这里有质量才调用addStockInfo，所以通过这一步肯定会有库存
+                    // TODO 注意这里没有读取packages和coordinate
+                    NnStockInfo.StockInfo stockInfo = mNnStockInfo.makeStockInfo(nnHistoryPolypeptide, date, q, "", "");
+                    stockInfo.setAbs_quality(q / flg);
+                    mNnStockInfo.addStockInfo(stockInfo);
                 }
             }
         }
-        return quality;
     }
 
-    private boolean isHave(Vector<String> stockInfo, String stock) {
-        for (String str : stockInfo) {
-            if (str.equals(stock)) {
-                return true;
+    /**
+     * 将得到的库存信息写回新单excel表格中
+     * 注意，这里还没有写入文件，需要调用output一次性写入文件
+     */
+    private void writeBack() {
+        // flg = 0，库存足够，修饰没问题，flg = 1，库存不够，修饰没问题，flg = 2，修饰有可能有问题，库存有可能不够
+        for (NnStockInfo info : mStockInfos) {
+            int flg = info.getFlg();
+            if (flg == 0) {
+                mNew.setCellValue(info.getRowIndex(), 11, info.getInfo());
+            } else {
+                CellStyle cellStyle = mNew.createCellStyle();
+                if (flg == 1) {
+                    cellStyle.setFillForegroundColor(IndexedColors.SEA_GREEN.getIndex());
+                } else {
+                    cellStyle.setFillForegroundColor(IndexedColors.ORANGE.getIndex());
+                }
+                cellStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+                int x = info.getRowIndex();
+                mNew.setCellValue(x, 27, info.getInfo());
+                Cell cell = mNew.getCell(x, 11);
+                cell.setCellValue(info.getInfo());
+                cell.setCellStyle(cellStyle);
+                ++otherCount;
             }
         }
-        return false;
     }
 
     // 初始化，将历史订单存入数据库中，以及其他一些初始化工作
     private void nnInit(String news){
+        mStockInfos = new Vector<>();
         try {
             mNnProperties = new NnProperties("nn.xml");
         } catch (IOException | XMLStreamException e) {
@@ -242,8 +247,8 @@ public class Control {
             e.printStackTrace();
         }
 
-        searchedCount = Integer.parseInt(mNnProperties.getProperty("searchedCount", "0"));
-        searchedTimes = Integer.parseInt(mNnProperties.getProperty("searchedTimes", "0"));
+        searchedCount = Integer.parseInt(mNnProperties.getProperty("searched_count", "0"));
+        searchedTimes = Integer.parseInt(mNnProperties.getProperty("searched_times", "0"));
         searchedTimes += 1;
 
         try {

@@ -7,6 +7,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
+import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 /**
@@ -29,6 +30,11 @@ public class DataManager extends Application {
         //Parent root = FXMLLoader.load(getClass().getResource("/com/nn/layout/main_layout.fxml"));
 
         Parent root = fxmlLoader.load();
+        root.setOnKeyPressed(event -> {
+            if (event.getCode() == KeyCode.ESCAPE) {
+                primaryStage.close();
+            }
+        });
 
         MainController controller = fxmlLoader.getController();
         controller.setStage(primaryStage);

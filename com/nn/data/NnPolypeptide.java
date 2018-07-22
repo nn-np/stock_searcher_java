@@ -10,47 +10,35 @@ import static java.lang.Math.abs;
 public class NnPolypeptide {
     private String orderId;
     private double purity;// 纯度
-    //private String workNo;// work号// TODO 这东西没用好像
+    private String workNo;// work号
     private String sequence;// 氨基酸序列
     private double mw;// 分子量
     private double quality;// 需要的质量
     private String modification;// 修饰
+    private String comments;// 备注
 
     public NnPolypeptide(String orderId, String sequence) {
-        if (orderId == null || sequence == null) {
-            return;
-        }
-        this.orderId = orderId;
-        this.sequence = sequence.trim();
+        this.orderId = orderId == null ? "" : orderId;
+        this.sequence = sequence == null ? "" : sequence.trim();
         purity = mw = quality = 0;
-        //this.workNo = workNo;
     }
 
+    // TODO 所有的空白字符返回""，不要返回null
     // 这条订单是否有效（注：如果这里任何一个值无效，这条订单就无效）
     public boolean isAvailable() {
-        return orderId != null && !orderId.equals("") && sequence != null && purity > -1 && mw > -1 && quality > -1;
+        return !orderId.equals("") && !sequence.equals("") && purity > -1 && mw > -1 && quality > -1;
+    }
+
+    public void setComments(String comments) {
+        this.comments = comments == null ? "" : comments;
+    }
+
+    public String getComments() {
+        return comments;
     }
 
     public void setModification(String modifications) {
-        modifications = getTrimString(modifications);
-        this.modification = modifications;
-    }
-
-    private String getTrimString(String modification) {
-        if (modification == null) {
-            return "";
-        }
-        char[] buffer = new char[120];
-        int len = modification.length();
-        int t = 0;
-        for (int i = 0; i < len; ++i) {
-            char c = modification.charAt(i);
-            if (c != ' ') {
-                buffer[t] = c;
-                ++t;
-            }
-        }
-        return new String(buffer);
+        this.modification = modifications == null ? "" : modifications.trim();
     }
 
     public String getModification() {
@@ -62,9 +50,7 @@ public class NnPolypeptide {
             mw = -1;
             return;
         }
-        str = str.substring(str.lastIndexOf("/") + 1);
-        //System.out.println(str);
-        mw = Pattern.compile("[0-9.]+").matcher(str).matches() ? Double.parseDouble(str) : -1;
+        mw = getMaxValue(str.toCharArray());
     }
 
     public void setMw(double mw) {
@@ -76,36 +62,59 @@ public class NnPolypeptide {
             quality = -1;
             return;
         }
-        str = str.replaceAll("mg", "").replaceAll("g", "")
-                .replaceAll("无", "0").replaceAll(".*-", "").replaceAll(" ", "");
-        //System.out.println(str);
-        quality = (Pattern.compile("[0-9.]*").matcher(str).matches() && !str.equals("")) ? Double.parseDouble(str) : -1;
+        quality = getMaxValue(str.toCharArray());
     }
 
-    // 公司库存写的乱七八糟，醉了,只能把不符合规则的库存忽略
-    // 如果格式没问题返回质量，有问题返回-1
-    public static double getQuality(String str) {
-        if (str == null || str.equals("")) {
-            return -1;
+    // 得到字符串中的最大值
+    private double getMaxValue(char[] chars) {
+        double value = 0;
+
+        boolean flg = false;
+        char[] cs = null;
+        int i = 0;
+        for (char c : chars) {
+            if (!flg) {
+                cs = new char[chars.length];
+            }
+            if (c >= '0' && c <= '9' || c == '.') {
+                flg = true;
+                cs[i++] = c;
+            } else {
+                if (i > 0) {
+                    flg = false;
+                    i = 0;
+                    double d = Double.parseDouble(new String(cs));
+                    if (value < d) {
+                        value = d;
+                    }
+                }
+            }
         }
-        str = str.replaceAll("mg", "").replaceAll("g", "")
-                .replaceAll("无", "0").replaceAll(".*-", "").replaceAll(" ", "");
-        return (Pattern.compile("[0-9.mg]*").matcher(str).matches() && !str.equals("")) ? Double.parseDouble(str) : -1;
+        return value;
     }
 
     public void setQuality(double quality) {
         this.quality = quality;
     }
 
+    // TODO 以后把这里全格式化，就不用占用资源处理了
     public void setPurity(String str) {
         if (str == null || str.equals("")) {
             purity = -1;
             return;
         }
-        str = str.replaceAll(">", "").replaceAll("%", "")
-                .replaceAll("crude", "1").replaceAll("Crude", "1");
-        //System.out.println(str);
-        purity = (Pattern.compile("[0-9.]+").matcher(str).matches() && !str.equals("")) ? Double.parseDouble(str) : -1;
+        char[] chars = new char[str.length()];
+        int i = 0;
+        for (char c : str.toCharArray()) {
+            if (c >= '0' && c <= '9') {// 纯度没有小数点
+                chars[i++] = c;
+            }
+        }
+        if (i > 0) {
+            purity = Double.parseDouble(new String(chars));
+        } else {
+            purity = 1;
+        }
     }
 
     public void setPurity(double purity) {
@@ -124,9 +133,9 @@ public class NnPolypeptide {
         this.orderId = orderId;
     }
 
-    /*public void setWorkNo(String workNo) {
-        this.workNo = workNo;
-    }*/
+    public void setWorkNo(String workNo) {
+        this.workNo = (workNo == null || !Pattern.compile("[0-9.]+").matcher(workNo).matches()) ? "" : workNo.substring(0, workNo.lastIndexOf('.'));
+    }
 
     public void setSequence(String sequence) {
         this.sequence = sequence;
@@ -140,9 +149,9 @@ public class NnPolypeptide {
         return purity;
     }
 
-    /*public String getWorkNo() {
+    public String getWorkNo() {
         return workNo;
-    }*/
+    }
 
     public String getSequence() {
         return sequence;
@@ -155,7 +164,7 @@ public class NnPolypeptide {
      */
     public int equalFlg(NnPolypeptide nnPolypeptide) {
         double d_value = abs(this.mw - nnPolypeptide.mw);
-        if (( d_value < 0.8) || (abs(d_value - 18) < 0.8)) {
+        if ((d_value < 0.8) || (abs(d_value - 18) < 0.8)) {
             if (this.purity < nnPolypeptide.purity) {
                 return 3;
             }

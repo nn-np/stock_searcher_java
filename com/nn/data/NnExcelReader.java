@@ -84,7 +84,7 @@ public class NnExcelReader {
     public String getCellString(int sheetIndex, int x, int y) {
         Cell cell = getCell(sheetIndex, x, y);
         if (cell == null) {
-            return null;
+            return "";
         }
         switch (cell.getCellTypeEnum()) {
             case NUMERIC:
@@ -96,7 +96,7 @@ public class NnExcelReader {
             case STRING:
                 return cell.getStringCellValue();
             default:
-                return null;
+                return "";
         }
     }
 
@@ -105,12 +105,9 @@ public class NnExcelReader {
     }
 
     public void setCellValue(int sheetIndex, int x, int y, String value) {
-        //Sheet sheet = getSheet(sheetIndex);
-        //Row row = sheet.getRow(x);
-        //Cell cell = row.createCell(y);
         Cell cell = createCell(sheetIndex, x, y);
         cell.setCellValue(value);
-        // TODO 注意，这里还没有写入文件 调用output一次性写入文件
+        // 注意，这里还没有写入文件 调用output一次性写入文件
     }
 
     public void setCellValue(int x, int y, String value) {

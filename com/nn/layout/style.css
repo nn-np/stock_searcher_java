@@ -1,28 +1,61 @@
 /*主背景*/
 .main {
-    -fx-border-width: 1;
-    -fx-border-color: rgb(24, 116, 205);
+    -fx-background-size: 360 127;
+    -fx-background-image: url("/main_bg.png");
 }
 
 .main_pop {
-    -fx-border-width: 1;
-    -fx-border-color: rgb(0, 178, 238);
+    -fx-border-radius: 12;
+    -fx-border-width: 2;
+    -fx-background-insets: 1;
+    -fx-border-color: rgba(255, 255, 255,0.9);
+    -fx-background-radius: 12;
+    -fx-background-color: rgba(200, 200, 200, 0.9);
 }
 
 .bt_close {
-    -fx-background-image: url("/close2.png");
+    -fx-background-image: url("/close.png");
     -fx-background-size: 20 20;
-    -fx-background-color: rgba(255, 255, 255, 0);
+    -fx-background-color: rgba(200, 200, 200, 0);
     -fx-background-position: center center;
 }
 
-.bt_close:hover{
+.bt_close:hover {
     -fx-background-image: url("/close.png");
     -fx-background-size: 20 20;
-    -fx-background-color: rgb(200, 200, 200);
+    -fx-background-radius: 24;
+    -fx-background-color: rgba(255, 255, 255, 0.8);
     -fx-background-position: center center;
 }
+
+.bt_main {
+    -fx-border-radius: 12;
+    -fx-border-width: 2;
+    -fx-background-insets: 1;
+    -fx-border-color: rgba(255, 255, 255,0.8);
+    -fx-background-color: rgba(255, 255, 255, 0.8);
+    -fx-background-radius: 12;
+}
+/*-fx-background-color: linear-gradient(to right, rgba(121, 255, 172, 0.8), rgba(255, 198, 49, 0.8));*/
+.bt_main:hover {
+    -fx-border-radius: 12;
+    -fx-border-width: 2;
+    -fx-background-insets: 1;
+    -fx-border-color: rgb(208, 58, 15);
+    -fx-background-color: rgba(255, 255, 255, 0.8);
+    -fx-background-radius: 12;
+}
+
 
 .label {
     -fx-background-color: rgba(200, 200, 200, 0);
+}
+
+.main_text_field {
+    -fx-border-radius: 12;
+    -fx-border-width: 2;
+    -fx-background-insets: 1;
+    -fx-border-color: rgba(255, 255, 255,0.8);
+    -fx-background-color: rgba(255, 255, 255, 0.8);
+    -fx-background-radius: 12;
 }
