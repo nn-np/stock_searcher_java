@@ -30,7 +30,7 @@ public class Control {
     private NnProperties mNnProperties;
 
     // 已查到的库存数量：足够和量不足，搜索的条数，搜索的次数
-    private int otherCount = 0, searchedCount, searchedTimes;
+    private int searchedCount, searchedTimes;
 
     public Control(String news, NnListener nnListener) {
         if (nnListener != null) {
@@ -119,7 +119,6 @@ public class Control {
             mNnListener.progress((double) i / newSize);// 进度监听者
         }
         searchedCount += count;
-        mNew.setCellValue(0, 11, "库存信息：" + mStockInfos.size() + "+" + otherCount);
     }
 
     // 从excel表获取多肽（NnPolypeptide）对象
@@ -182,6 +181,7 @@ public class Control {
         nnHistoryPolypeptide.setMw(resultHistory.getString("mw"));
         nnHistoryPolypeptide.setPurity(resultHistory.getString("purity"));
         nnHistoryPolypeptide.setModification(resultHistory.getString("modification"));
+        nnHistoryPolypeptide.setComments(resultHistory.getString("comments"));
         return nnHistoryPolypeptide;
     }
 
@@ -201,8 +201,7 @@ public class Control {
                 double q = getQuality(resultSet.getString("quality").toCharArray());
                 if (q > 0) {// 这里有质量才调用addStockInfo，所以通过这一步肯定会有库存
                     // TODO 注意这里没有读取packages和coordinate
-                    NnStockInfo.StockInfo stockInfo = mNnStockInfo.makeStockInfo(nnHistoryPolypeptide, date, q, "", "");
-                    stockInfo.setAbs_quality(q / flg);
+                    NnStockInfo.StockInfo stockInfo = mNnStockInfo.makeStockInfo(nnHistoryPolypeptide, date, q, "", "", q / flg);
                     mNnStockInfo.addStockInfo(stockInfo);
                 }
             }
@@ -214,11 +213,13 @@ public class Control {
      * 注意，这里还没有写入文件，需要调用output一次性写入文件
      */
     private void writeBack() {
+        int enoughCount = 0, otherCount = 0;
         // flg = 0，库存足够，修饰没问题，flg = 1，库存不够，修饰没问题，flg = 2，修饰有可能有问题，库存有可能不够
         for (NnStockInfo info : mStockInfos) {
             int flg = info.getFlg();
             if (flg == 0) {
                 mNew.setCellValue(info.getRowIndex(), 11, info.getInfo());
+                ++enoughCount;
             } else {
                 CellStyle cellStyle = mNew.createCellStyle();
                 if (flg == 1) {
@@ -235,6 +236,7 @@ public class Control {
                 ++otherCount;
             }
         }
+        mNew.setCellValue(0, 11, "库存信息：" + enoughCount + "+" + otherCount);
     }
 
     // 初始化，将历史订单存入数据库中，以及其他一些初始化工作

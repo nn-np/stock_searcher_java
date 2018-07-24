@@ -82,8 +82,8 @@ public class NnStockInfo {
         return mStocks.get(index);
     }
 
-    public StockInfo makeStockInfo(NnPolypeptide nnPolypeptide, String date, double quality, String packages, String coordinate) {
-        return new StockInfo(nnPolypeptide, date, quality, packages, coordinate);
+    public StockInfo makeStockInfo(NnPolypeptide nnPolypeptide, String date, double quality, String packages, String coordinate, double abs_quality) {
+        return new StockInfo(nnPolypeptide, date, quality, packages, coordinate, abs_quality);
     }
 
     public int getFlg() {
@@ -107,13 +107,35 @@ public class NnStockInfo {
         // 注意，绝对质量一定要设置
         private double abs_quality;
 
-        public StockInfo(NnPolypeptide nnPolypeptide, String date, double quality, String packages, String coordinate) {
+        public StockInfo(NnPolypeptide nnPolypeptide, String date, double quality, String packages, String coordinate, double abs_quality) {
             this.nnHistoryPolypeptide = nnPolypeptide;
             this.date = date;
             this.quality = quality;
             this.packages = packages;
             this.coordinate = coordinate;
-            modificationFlg = nnHistoryPolypeptide.getModification().equals(nnNewPolypeptide.getModification());
+            this.abs_quality = abs_quality;
+            modificationFlg = getModificationFlg();
+        }
+
+        private boolean getModificationFlg() {
+            String mod_1 = getModStr(nnHistoryPolypeptide.getModification().toCharArray());
+            String mod_2 = getModStr(nnNewPolypeptide.getModification().toCharArray());
+            return mod_2.equals(mod_1);
+        }
+
+        // 用于去除“修饰”字符串中的不必要字符
+        private String getModStr(char[] modification) {
+            char[] chars = new char[modification.length];
+            int i = 0;
+            for (char c : modification) {
+                if (c >= 'A' && c <= 'z') {
+                    if (c < 97) {
+                        c += 32;
+                    }
+                    chars[i++] = c;
+                }
+            }
+            return new String(chars, 0, i);
         }
 
         public String getModification() {

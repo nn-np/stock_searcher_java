@@ -19,8 +19,23 @@ public class NnPolypeptide {
 
     public NnPolypeptide(String orderId, String sequence) {
         this.orderId = orderId == null ? "" : orderId;
-        this.sequence = sequence == null ? "" : sequence.trim();
+        this.sequence = sequence == null ? "" : sequence;
         purity = mw = quality = 0;
+    }
+
+    // 这个方法用来格式化序列
+    private String getSequence(String sequence) {
+        char[] chars = new char[sequence.length()];
+        int i = 0;
+        for (char c : sequence.toCharArray()) {
+            if (c > 64 && c < 126) {
+                if (c > 96 && c < 124) {
+                    c -= 32;
+                }
+                chars[i++] = c;
+            }
+        }
+        return new String(chars, 0, i);
     }
 
     // TODO 所有的空白字符返回""，不要返回null
@@ -67,7 +82,7 @@ public class NnPolypeptide {
 
     // 得到字符串中的最大值
     private double getMaxValue(char[] chars) {
-        double value = 0;
+        double value = -1;
 
         boolean flg = false;
         char[] cs = null;
@@ -75,18 +90,18 @@ public class NnPolypeptide {
         for (char c : chars) {
             if (!flg) {
                 cs = new char[chars.length];
+                flg = true;
             }
             if (c >= '0' && c <= '9' || c == '.') {
-                flg = true;
                 cs[i++] = c;
+                double d = Double.parseDouble(new String(cs));
+                if (value < d) {
+                    value = d;
+                }
             } else {
                 if (i > 0) {
                     flg = false;
                     i = 0;
-                    double d = Double.parseDouble(new String(cs));
-                    if (value < d) {
-                        value = d;
-                    }
                 }
             }
         }

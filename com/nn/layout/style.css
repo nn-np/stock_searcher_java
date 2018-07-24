@@ -1,6 +1,5 @@
 /*主背景*/
 .main {
-    -fx-background-size: 360 127;
     -fx-background-image: url("/main_bg.png");
 }
 

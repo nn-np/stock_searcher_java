@@ -2,12 +2,14 @@ package com.nn.main;
 
 import com.nn.layout.MainController;
 import com.nn.layout.NnDragListener;
+import com.nn.layout.WeighingController;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 /**
@@ -19,32 +21,44 @@ import javafx.stage.StageStyle;
  */
 
 public class DataManager extends Application {
+    private static boolean startFlg = false;// 开始方法，如果是称量打开，则flg为true
     public static void main(String[] args) {
+        startFlg = args.length > 0 && args[0].equals("weighing");
+        //startFlg = true;
         launch(args);
     }
 
     @Override
     public void start(Stage primaryStage) throws Exception {
-        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/com/nn/layout/main_layout.fxml"));
+        FXMLLoader fxmlLoader = null;
+        Scene scene = null;
+        Parent root = null;
+        if (startFlg) {// 如果是称量
+            fxmlLoader = new FXMLLoader(getClass().getResource("/com/nn/layout/weighing_layout.fxml"));
+            root = fxmlLoader.load();
+            root.setStyle("-fx-background-size: 360 127");
+            scene = new Scene(root, 360, 360);
+            WeighingController controller = fxmlLoader.getController();
+            controller.setStage(primaryStage);
+        } else {// 其他打开查库存
+            fxmlLoader = new FXMLLoader(getClass().getResource("/com/nn/layout/main_layout.fxml"));
+            root = fxmlLoader.load();
+            root.setStyle("-fx-background-size: 360 127");
+            scene = new Scene(root, 360, 127);
+            MainController controller = fxmlLoader.getController();
+            controller.setStage(primaryStage);
+        }
 
-        //Parent root = FXMLLoader.load(getClass().getResource("/com/nn/layout/main_layout.fxml"));
-
-        Parent root = fxmlLoader.load();
         root.setOnKeyPressed(event -> {
             if (event.getCode() == KeyCode.ESCAPE) {
                 primaryStage.close();
             }
         });
 
-        MainController controller = fxmlLoader.getController();
-        controller.setStage(primaryStage);
-
-        Scene scene = new Scene(root, 360, 127);
         scene.setFill(null);
         primaryStage.setScene(scene);
         primaryStage.getIcons().add(new Image("语文.png"));
         primaryStage.initStyle(StageStyle.TRANSPARENT);
-        //primaryStage.initStyle(StageStyle.UTILITY);
         primaryStage.setAlwaysOnTop(true);
 
         NnDragListener.addNnDragListener(primaryStage,root);// 添加拖动监听
