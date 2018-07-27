@@ -1,7 +1,6 @@
 package com.nn.main;
 
 import com.nn.data.*;
-import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.FillPatternType;
 import org.apache.poi.ss.usermodel.IndexedColors;
@@ -60,6 +59,13 @@ public class Control {
         try {
             mNnProperties.submit();
         } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        try {
+            mHistory.close();
+            mStock.close();
+        } catch (SQLException e) {
             e.printStackTrace();
         }
 
@@ -214,6 +220,13 @@ public class Control {
      */
     private void writeBack() {
         int enoughCount = 0, otherCount = 0;
+        // 这里简直是向生活低下狗头的典型案例啊，别问我为什么写这么繁琐（解决.xls文件有部分颜色设置不正确问题，这问题很迷）
+        CellStyle cellStyle = mNew.createCellStyle();
+        cellStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+        cellStyle.setFillForegroundColor(IndexedColors.SEA_GREEN.getIndex());
+        CellStyle cellStyle1 = mNew.createCellStyle();
+        cellStyle1.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+        cellStyle1.setFillForegroundColor(IndexedColors.ORANGE.getIndex());
         // flg = 0，库存足够，修饰没问题，flg = 1，库存不够，修饰没问题，flg = 2，修饰有可能有问题，库存有可能不够
         for (NnStockInfo info : mStockInfos) {
             int flg = info.getFlg();
@@ -221,18 +234,14 @@ public class Control {
                 mNew.setCellValue(info.getRowIndex(), 11, info.getInfo());
                 ++enoughCount;
             } else {
-                CellStyle cellStyle = mNew.createCellStyle();
-                if (flg == 1) {
-                    cellStyle.setFillForegroundColor(IndexedColors.SEA_GREEN.getIndex());
-                } else {
-                    cellStyle.setFillForegroundColor(IndexedColors.ORANGE.getIndex());
-                }
-                cellStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
                 int x = info.getRowIndex();
-                mNew.setCellValue(x, 27, info.getInfo());
-                Cell cell = mNew.getCell(x, 11);
-                cell.setCellValue(info.getInfo());
-                cell.setCellStyle(cellStyle);
+                String str = info.getInfo();
+                if (flg == 1) {
+                    mNew.setCellValue(x, 11, str, cellStyle);
+                } else {
+                    mNew.setCellValue(x, 11, str, cellStyle1);
+                }
+                mNew.setCellValue(x, 27, str);
                 ++otherCount;
             }
         }

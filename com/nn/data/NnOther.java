@@ -33,6 +33,10 @@ public class NnOther {
         Files.copy(sour.toPath(), des.toPath());
     }
 
+    public static void nnBackup(String source) throws IOException {
+        nnBackup(source, null);
+    }
+
     // 去掉不必要的字符，将所有库存加起来
     public static double getQuality(char[] chars) {
         double value = 0;
@@ -53,10 +57,6 @@ public class NnOther {
             }
         }
         return value + (len > 0 ? Double.parseDouble(new String(chars1)) : 0);
-    }
-
-    public static void nnBackup(String source) throws IOException {
-        nnBackup(source, null);
     }
 
     // 弹出提示窗口

@@ -5,11 +5,21 @@ import java.sql.*;
 public class NnAccdbReader {
     private Statement mStatement;
     private String mUrl;
+    private Connection mConnection;
     public NnAccdbReader(String url) throws ClassNotFoundException, SQLException {
         mUrl = url;
         Class.forName("com.hxtt.sql.access.AccessDriver");
-        Connection connection = DriverManager.getConnection("jdbc:Access:///" + mUrl);
-        mStatement = connection.createStatement();
+        mConnection = DriverManager.getConnection("jdbc:Access:///" + mUrl);
+        mStatement = mConnection.createStatement();
+    }
+
+    public void close() throws SQLException {
+        mConnection.close();
+        mStatement.close();
+    }
+
+    public Statement getStatement() throws SQLException {
+        return mConnection.createStatement();
     }
 
     public String getUrl() {

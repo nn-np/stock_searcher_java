@@ -9,7 +9,6 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
-import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 /**
@@ -30,9 +29,9 @@ public class DataManager extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception {
-        FXMLLoader fxmlLoader = null;
-        Scene scene = null;
-        Parent root = null;
+        FXMLLoader fxmlLoader;
+        Scene scene;
+        Parent root;
         if (startFlg) {// 如果是称量
             fxmlLoader = new FXMLLoader(getClass().getResource("/com/nn/layout/weighing_layout.fxml"));
             root = fxmlLoader.load();

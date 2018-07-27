@@ -19,17 +19,17 @@ public class NnPolypeptide {
 
     public NnPolypeptide(String orderId, String sequence) {
         this.orderId = orderId == null ? "" : orderId;
-        this.sequence = sequence == null ? "" : sequence;
+        this.sequence = sequence == null ? "" : getSequence(sequence);
         purity = mw = quality = 0;
     }
 
     // 这个方法用来格式化序列
-    private String getSequence(String sequence) {
+    public String getSequence(String sequence) {
         char[] chars = new char[sequence.length()];
         int i = 0;
         for (char c : sequence.toCharArray()) {
             if (c > 64 && c < 126) {
-                if (c > 96 && c < 124) {
+                if (c > 96 && c < 123) {
                     c -= 32;
                 }
                 chars[i++] = c;
