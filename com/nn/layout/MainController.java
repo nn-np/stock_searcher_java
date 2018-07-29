@@ -204,6 +204,7 @@ public class MainController {
             System.out.println(info);
             Platform.runLater(() -> {
                 toStop();
+                tf_main.setText(info);
                 mNnOther.showInfo("错误！！", info);
             });
         }

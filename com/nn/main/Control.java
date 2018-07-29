@@ -14,12 +14,9 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Vector;
 
-import static com.nn.data.NnOther.getQuality;
-
 public class Control {
     private boolean isContinue = true;
     private NnExcelReader mNew;// 新单（这个是excel）
-    private NnAccdbReader mStock;// 库存（下面两个是Access数据库）
     private NnAccdbReader mHistory;// 历史订单
 
     private NnListener mNnListener;
@@ -32,28 +29,27 @@ public class Control {
     private int searchedCount, searchedTimes;
 
     public Control(String news, NnListener nnListener) {
-        if (nnListener != null) {
-            mNnListener = nnListener;
-        }
+        mNnListener = nnListener;
         if (news == null || news.equals("")) {
             mNnListener.errorInfo("请先选择新单表格！");
             return;
         }
         new Thread(() -> {
-            nnInit(news);// 初始化
-            start();// 开始查找数据
-            nnEnd();
+            if (nnInit(news)) {// 初始化
+                start();// 开始查找数据
+                nnEnd();
+            }
         }).start();
     }
 
     private void nnEnd(){
+        mNnListener.complete();
         if (!isContinue) {// 如果用户在查找结束之前取消查找，说明用户不希望改变表格，这里return
             mNnListener.errorInfo("已取消!");
             return;
         }
         writeBack();
         outPut();
-        mNnListener.complete();
         mNnProperties.put("searched_count", "" + searchedCount);
         mNnProperties.put("searched_times", "" + searchedTimes);
         try {
@@ -64,7 +60,6 @@ public class Control {
 
         try {
             mHistory.close();
-            mStock.close();
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -146,30 +141,28 @@ public class Control {
     private void findHistory() {
         try {
             NnPolypeptide nnNewPolypeptide = mNnStockInfo.getNnNewPolypeptide();
-            ResultSet resultHistory = mHistory.getResultSet("select * from history where sequence = '" + nnNewPolypeptide.getSequence() + "'");
-
-            boolean isHave = false;
+            ResultSet resultHistory = mHistory.getResultSet("select * from history inner join stock_new on history.orderId = stock_new.orderId" +
+                    " and sequence = '" + nnNewPolypeptide.getSequence() + "' order by quality desc");
 
             while (resultHistory.next()) {
                 NnPolypeptide nnHistoryPolypeptide = getNnPolypeptideFromAccdb(resultHistory);
 
-                // 判断历史订单里是否存在这条新单数据，如果有，isHave会为true，将不再添加到数据库
-                if (nnNewPolypeptide.getOrderId().equals(nnHistoryPolypeptide.getOrderId())) {
-                    isHave = true;
-                }
+                NnStockInfo.StockInfo stockInfo = getStockInfo(resultHistory, nnHistoryPolypeptide);
 
                 int flag = nnHistoryPolypeptide.equalFlg(nnNewPolypeptide);
-                if (flag > 0) {
-                    findStock(nnHistoryPolypeptide, flag);
+                if (flag > 0 && stockInfo.getQuality() > 1) {// flg大于0，这条库存有效
+                    stockInfo.setAbs_quality(flag);
+                    mNnStockInfo.addStockInfo(stockInfo);
                 }
 
             }
 
-            if (!isHave) {
+            try {
                 String date = new SimpleDateFormat("yyyy/M/d").format(new Date());
                 mHistory.execute("insert into history values ('" + date + "','" + nnNewPolypeptide.getOrderId() + "','" +
                         nnNewPolypeptide.getSequence() + "','" + nnNewPolypeptide.getPurity() + "','" + nnNewPolypeptide.getModification()
                         + "','" + nnNewPolypeptide.getMw() + "','" + nnNewPolypeptide.getComments() + "')");
+            } catch (Exception ignored) {
             }
 
             if (mNnStockInfo.isAvailable()) {
@@ -181,6 +174,21 @@ public class Control {
         }
     }
 
+    // 从access获取库存信息
+    private NnStockInfo.StockInfo getStockInfo(ResultSet resultHistory, NnPolypeptide nnHistoryPolypeptide) throws SQLException {
+        NnStockInfo.StockInfo stockInfo = mNnStockInfo.makeStockInfo(nnHistoryPolypeptide);
+        String q = resultHistory.getString("quality");
+        double quality = q == null ? 0 : NnOther.getQuality(q.toCharArray());
+        stockInfo.setQuality(quality);
+        String date = resultHistory.getString("_date");
+        stockInfo.setDate(date);
+        String packages = resultHistory.getString("package");
+        stockInfo.setPackages(packages);
+        String coordinate = resultHistory.getString("coordinate");
+        stockInfo.setCoordinate(coordinate);
+        return stockInfo;
+    }
+
     // 从Access数据库获取多肽对象
     private NnPolypeptide getNnPolypeptideFromAccdb(ResultSet resultHistory) throws SQLException {
         NnPolypeptide nnHistoryPolypeptide = new NnPolypeptide(resultHistory.getString("orderId"), resultHistory.getString("sequence"));
@@ -189,29 +197,6 @@ public class Control {
         nnHistoryPolypeptide.setModification(resultHistory.getString("modification"));
         nnHistoryPolypeptide.setComments(resultHistory.getString("comments"));
         return nnHistoryPolypeptide;
-    }
-
-    // todo 修饰不同的区别对待  对比的时候把标点符号去掉
-    // flg是用来计算绝对质量用的，哈哈，发现我创造了很多新词，什么历史订单，绝对质量，希望这个项目没有第二个人维护（逃）
-    // 那么解释一下绝对质量，免得以后懵逼，绝对质量就是如果历史订单纯度不足，除去3之后得到的质量
-    private void findStock(NnPolypeptide nnHistoryPolypeptide, int flg) throws SQLException {
-        String orderId = nnHistoryPolypeptide.getOrderId();
-        ResultSet resultSet = mStock.getResultSet("select * from stock where orderId = '" + orderId + "'");
-        while (resultSet.next()) {
-            String cause = resultSet.getString("cause");
-            if (cause == null || cause.equals("")) {
-                String date = resultSet.getString("_date");
-                if (date == null) {
-                    continue;
-                }
-                double q = getQuality(resultSet.getString("quality").toCharArray());
-                if (q > 0) {// 这里有质量才调用addStockInfo，所以通过这一步肯定会有库存
-                    // TODO 注意这里没有读取packages和coordinate
-                    NnStockInfo.StockInfo stockInfo = mNnStockInfo.makeStockInfo(nnHistoryPolypeptide, date, q, "", "", q / flg);
-                    mNnStockInfo.addStockInfo(stockInfo);
-                }
-            }
-        }
     }
 
     /**
@@ -249,13 +234,14 @@ public class Control {
     }
 
     // 初始化，将历史订单存入数据库中，以及其他一些初始化工作
-    private void nnInit(String news){
+    private boolean nnInit(String news){
         mStockInfos = new Vector<>();
         try {
             mNnProperties = new NnProperties("nn.xml");
         } catch (IOException | XMLStreamException e) {
             mNnListener.errorInfo("配置文件读取错误！");
             e.printStackTrace();
+            return false;
         }
 
         searchedCount = Integer.parseInt(mNnProperties.getProperty("searched_count", "0"));
@@ -267,24 +253,19 @@ public class Control {
         } catch (IOException e) {
             mNnListener.errorInfo("新单文件读取错误！");
             e.printStackTrace();
+            return false;
         }
         try {
-            mHistory = new NnAccdbReader(mNnProperties.getProperty("history","history(new).accdb"));
+            mHistory = new NnAccdbReader(mNnProperties.getProperty("history","polypeptideInfo.accdb"));
         } catch (ClassNotFoundException e) {
             mNnListener.errorInfo("Access数据库驱动错误！");
             e.printStackTrace();
+            return false;
         } catch (SQLException e) {
             mNnListener.errorInfo("历史订单数据库读取错误！");
             e.printStackTrace();
+            return false;
         }
-        try {
-            mStock = new NnAccdbReader((mNnProperties.getProperty("stock","stock.accdb")));
-        } catch (ClassNotFoundException e) {
-            mNnListener.errorInfo("Access数据库驱动错误！");
-            e.printStackTrace();
-        } catch (SQLException e) {
-            mNnListener.errorInfo("库存数据库读取错误！");
-            e.printStackTrace();
-        }
+        return true;
     }
 }

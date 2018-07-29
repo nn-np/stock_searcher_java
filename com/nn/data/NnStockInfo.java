@@ -82,8 +82,8 @@ public class NnStockInfo {
         return mStocks.get(index);
     }
 
-    public StockInfo makeStockInfo(NnPolypeptide nnPolypeptide, String date, double quality, String packages, String coordinate, double abs_quality) {
-        return new StockInfo(nnPolypeptide, date, quality, packages, coordinate, abs_quality);
+    public StockInfo makeStockInfo(NnPolypeptide nnPolypeptide) {
+        return new StockInfo(nnPolypeptide);
     }
 
     public int getFlg() {
@@ -107,13 +107,8 @@ public class NnStockInfo {
         // 注意，绝对质量一定要设置
         private double abs_quality;
 
-        public StockInfo(NnPolypeptide nnPolypeptide, String date, double quality, String packages, String coordinate, double abs_quality) {
+        public StockInfo(NnPolypeptide nnPolypeptide) {
             this.nnHistoryPolypeptide = nnPolypeptide;
-            this.date = date;
-            this.quality = quality;
-            this.packages = packages;
-            this.coordinate = coordinate;
-            this.abs_quality = abs_quality;
             modificationFlg = getModificationFlg();
         }
 
@@ -136,6 +131,22 @@ public class NnStockInfo {
                 }
             }
             return new String(chars, 0, i);
+        }
+
+        public void setDate(String date) {
+            this.date = date;
+        }
+
+        public void setQuality(double quality) {
+            this.quality = quality;
+        }
+
+        public void setPackages(String packages) {
+            this.packages = packages;
+        }
+
+        public void setCoordinate(String coordinate) {
+            this.coordinate = coordinate;
         }
 
         public String getModification() {
@@ -162,8 +173,8 @@ public class NnStockInfo {
             return coordinate;
         }
 
-        public void setAbs_quality(double abs_quality) {
-            this.abs_quality = abs_quality;
+        public void setAbs_quality(int flag) {
+            this.abs_quality = quality / flag;
         }
 
         public double getAbs_quality() {
