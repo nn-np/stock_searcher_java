@@ -49,6 +49,7 @@ public class Control {
             return;
         }
         writeBack();
+        writeStockBack();
         outPut();
         mNnProperties.put("searched_count", "" + searchedCount);
         mNnProperties.put("searched_times", "" + searchedTimes);
@@ -65,6 +66,35 @@ public class Control {
         }
 
         new Thread(this::historyBackup).start();
+    }
+
+    private void writeStockBack() {
+        mNew.createSheet("库存汇总");// TODO 有时间这里优化下
+        mNew.setCellValue(1, 0, 0, "新单Work No", null);
+        mNew.setCellValue(1, 0, 1, "orderId", null);
+        mNew.setCellValue(1, 0, 2, "分子量", null);
+        mNew.setCellValue(1, 0, 3, "纯度", null);
+        mNew.setCellValue(1, 0, 4, "备注", null);
+        mNew.setCellValue(1, 0, 5, "库存日期", null);
+        //mNew.setCellValue(1, 0, 6, "组别", null);
+        mNew.setCellValue(1, 0, 6, "袋", null);
+        mNew.setCellValue(1, 0, 7, "坐标", null);
+        int i = 1;
+        for (NnStockInfo info : mStockInfos) {
+            Vector<NnStockInfo.StockInfo> ifs = info.getStocks();
+            mNew.setCellValue(1, i, 0, info.getNnNewPolypeptide().getWorkNo(), null);
+            for (NnStockInfo.StockInfo if2 : ifs) {
+                mNew.setCellValue(1, i, 1, if2.getOrderId(), null);
+                mNew.setCellValue(1, i, 2, ""+if2.getMw(), null);
+                mNew.setCellValue(1, i, 3, if2.getPurity() < 5 ? "Crude" : (">" + if2.getPurity()).replaceAll(".0", "%"), null);
+                mNew.setCellValue(1, i, 4, if2.getComments(), null);
+                mNew.setCellValue(1, i, 5, if2.getDate(), null);
+                //mNew.setCellValue(1, i, 6, if2.getGroup(), null);
+                mNew.setCellValue(1, i, 6, if2.getPackages(), null);
+                mNew.setCellValue(1, i, 7, if2.getCoordinate(), null);
+                ++i;
+            }
+        }
     }
 
     private void historyBackup() {// 定时对历史数据进行备份，以免出现意外毁坏珍贵数据
@@ -150,7 +180,7 @@ public class Control {
                 NnStockInfo.StockInfo stockInfo = getStockInfo(resultHistory, nnHistoryPolypeptide);
 
                 int flag = nnHistoryPolypeptide.equalFlg(nnNewPolypeptide);
-                if (flag > 0 && stockInfo.getQuality() > 1) {// flg大于0，这条库存有效
+                if (flag > 0 && stockInfo.getQuality() > 0) {// flg大于0，这条库存有效
                     stockInfo.setAbs_quality(flag);
                     mNnStockInfo.addStockInfo(stockInfo);
                 }

@@ -1,9 +1,13 @@
 package com.nn.data;
 
 import com.nn.layout.NnPopController;
+import com.nn.main.NnOnDragDropListener;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.input.Dragboard;
+import javafx.scene.input.TransferMode;
 import javafx.stage.Stage;
 
 import java.io.File;
@@ -12,6 +16,7 @@ import java.nio.file.Files;
 
 /**
  * 提供其他功能，比如备份数据，弹出提示窗等方法
+ * 为了复用代码，有的没的代码全丢到这里来了
  */
 public class NnOther {
     // 备份数据
@@ -83,5 +88,27 @@ public class NnOther {
         popController.setFadeTransition(root);
 
         stage.show();
+    }
+
+    // 支持文件拖拽
+    public void initDragDrop(Node root, NnOnDragDropListener listener) {
+        root.setOnDragOver(event -> {
+            Dragboard db = event.getDragboard();
+            if (db.hasUrl()) {
+                event.acceptTransferModes(TransferMode.LINK);
+            }
+            event.consume();
+        });
+        root.setOnDragDropped(event -> {
+            Dragboard db = event.getDragboard();
+            if (db.hasUrl()) {
+                String url = db.getUrl().replaceAll("file:/", "");
+                System.out.println(url);
+                listener.onDragDropped(url);
+                event.acceptTransferModes(TransferMode.ANY);
+            }
+            event.setDropCompleted(true);
+            event.consume();
+        });
     }
 }

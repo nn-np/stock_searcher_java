@@ -22,7 +22,7 @@ import javafx.stage.StageStyle;
 public class DataManager extends Application {
     private static boolean startFlg = false;// 开始方法，如果是称量打开，则flg为true
     public static void main(String[] args) {
-        startFlg = args.length > 0 && args[0].equals("weighing");
+        startFlg = args.length > 0 && args[0].equals("weighting");
         //startFlg = true;
         launch(args);
     }
@@ -35,14 +35,12 @@ public class DataManager extends Application {
         if (startFlg) {// 如果是称量
             fxmlLoader = new FXMLLoader(getClass().getResource("/com/nn/layout/weighing_layout.fxml"));
             root = fxmlLoader.load();
-            root.setStyle("-fx-background-size: 360 127");
-            scene = new Scene(root, 360, 360);
+            scene = new Scene(root, 430, 330);
             WeighingController controller = fxmlLoader.getController();
             controller.setStage(primaryStage);
         } else {// 其他打开查库存
             fxmlLoader = new FXMLLoader(getClass().getResource("/com/nn/layout/main_layout.fxml"));
             root = fxmlLoader.load();
-            root.setStyle("-fx-background-size: 360 127");
             scene = new Scene(root, 360, 127);
             MainController controller = fxmlLoader.getController();
             controller.setStage(primaryStage);

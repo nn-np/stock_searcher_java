@@ -54,6 +54,10 @@ public class NnStockInfo {
         return false;
     }
 
+    public Vector<StockInfo> getStocks() {
+        return mStocks;
+    }
+
     public String getInfo() {
         int flg = getFlg();
         boolean isError = flg == 2;// 这个值为true表示有错误
@@ -157,6 +161,14 @@ public class NnStockInfo {
             return nnHistoryPolypeptide.getOrderId();
         }
 
+        public double getMw() {
+            return nnHistoryPolypeptide.getMw();
+        }
+
+        public double getPurity() {
+            return nnHistoryPolypeptide.getPurity();
+        }
+
         public String getDate() {
             return date;
         }
@@ -179,6 +191,10 @@ public class NnStockInfo {
 
         public double getAbs_quality() {
             return abs_quality;
+        }
+
+        public String getComments() {
+            return nnHistoryPolypeptide.getComments();
         }
     }
 }

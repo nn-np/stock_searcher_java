@@ -31,6 +31,19 @@ public class NnExcelReader {
         in.close();
     }
 
+    public NnExcelReader() {
+        mBook = new XSSFWorkbook();
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
+    }
+
+    public void createSheet(String s) {
+        mBook.removeSheetAt(1);
+        mBook.createSheet(s);
+    }
+
     public String getUrl() {
         return url;
     }
@@ -104,21 +117,22 @@ public class NnExcelReader {
         return getCellString(0, x, y);
     }
 
-    public void setCellValue(int sheetIndex, int x, int y, String value, CellStyle style) {
+    public NnExcelReader setCellValue(int sheetIndex, int x, int y, String value, CellStyle style) {
         Cell cell = createCell(sheetIndex, x, y);
         cell.setCellValue(value);
         if (style != null) {
             cell.setCellStyle(style);
         }
+        return this;
         // 注意，这里还没有写入文件 调用output一次性写入文件
     }
 
-    public void setCellValue(int x, int y, String value) {
-        setCellValue(0, x, y, value, null);
+    public NnExcelReader setCellValue(int x, int y, String value) {
+        return setCellValue(0, x, y, value, null);
     }
 
-    public void setCellValue(int x, int y, String value, CellStyle style) {
-        setCellValue(0, x, y, value, style);
+    public NnExcelReader setCellValue(int x, int y, String value, CellStyle style) {
+        return setCellValue(0, x, y, value, style);
     }
 
     public Cell createCell(int sheetIndex, int x, int y) {

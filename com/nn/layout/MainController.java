@@ -1,15 +1,13 @@
 package com.nn.layout;
 
-
 import com.nn.data.NnOther;
 import com.nn.data.NnProperties;
 import com.nn.main.Control;
 import com.nn.main.NnListener;
+import com.nn.main.NnOnDragDropListener;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.scene.control.*;
-import javafx.scene.input.Dragboard;
-import javafx.scene.input.TransferMode;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
@@ -17,7 +15,6 @@ import javafx.stage.Stage;
 import javax.xml.stream.XMLStreamException;
 import java.io.File;
 import java.io.IOException;
-
 
 public class MainController {
     private NnProperties mNnProperties;
@@ -27,7 +24,6 @@ public class MainController {
     private int isStart = 0;
 
     private Stage mStage;
-
 
     public AnchorPane root;
     public Button bt_start;
@@ -52,42 +48,23 @@ public class MainController {
                 e.printStackTrace();
             }
             tf_main.setFocusTraversable(false);
-            initDragDrop();
-        });
-    }
-
-    public void setStage(Stage stage) {
-        mStage = stage;
-    }
-
-    // 支持文件拖拽
-    private void initDragDrop() {
-        root.setOnDragOver(event -> {
-            toStop();
-            Dragboard db = event.getDragboard();
-            if (db.hasUrl()) {
-                event.acceptTransferModes(TransferMode.LINK);
-            }
-            event.consume();
-        });
-        root.setOnDragDropped(event -> {
-            Dragboard db = event.getDragboard();
-            if (db.hasUrl()) {
-                String url = db.getUrl().replaceAll("file:/", "");
-                System.out.println(url);
-                String str = url.substring(url.lastIndexOf('.') + 1);
-                if (str.equals("xls") || str.equals("xlsx")) {
+            //initDragDrop();
+            mNnOther.initDragDrop(root, url -> {
+                toStop();
+                String str = url.substring(url.lastIndexOf('.'));
+                if (str.equals(".xls") || str.equals(".xlsx")) {
                     tf_main.setText(url);
                     news = url;
                 } else {
                     tf_main.setText("文件无效！");
                     news = null;
                 }
-                event.acceptTransferModes(TransferMode.ANY);
-            }
-            event.setDropCompleted(true);
-            event.consume();
+            });
         });
+    }
+
+    public void setStage(Stage stage) {
+        mStage = stage;
     }
 
     public void select(ActionEvent event) {// 选择按钮事件
