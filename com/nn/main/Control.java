@@ -58,40 +58,38 @@ public class Control {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
         try {
             mHistory.close();
         } catch (SQLException e) {
             e.printStackTrace();
         }
-
         new Thread(this::historyBackup).start();
     }
 
     private void writeStockBack() {
-        mNew.createSheet("库存汇总");// TODO 有时间这里优化下
+        mNew.createSheet("库存汇总");// TODO 有时间这里优化下，主要是格式
         mNew.setCellValue(1, 0, 0, "新单Work No", null);
         mNew.setCellValue(1, 0, 1, "orderId", null);
-        mNew.setCellValue(1, 0, 2, "分子量", null);
-        mNew.setCellValue(1, 0, 3, "纯度", null);
-        mNew.setCellValue(1, 0, 4, "备注", null);
+        mNew.setCellValue(1, 0, 2, "质量", null);
+        mNew.setCellValue(1, 0, 3, "分子量（实际）", null);
+        mNew.setCellValue(1, 0, 4, "纯度（实际）", null);
         mNew.setCellValue(1, 0, 5, "库存日期", null);
-        //mNew.setCellValue(1, 0, 6, "组别", null);
         mNew.setCellValue(1, 0, 6, "袋", null);
         mNew.setCellValue(1, 0, 7, "坐标", null);
+        mNew.setCellValue(1, 0, 8, "备注", null);
         int i = 1;
         for (NnStockInfo info : mStockInfos) {
             Vector<NnStockInfo.StockInfo> ifs = info.getStocks();
             mNew.setCellValue(1, i, 0, info.getNnNewPolypeptide().getWorkNo(), null);
             for (NnStockInfo.StockInfo if2 : ifs) {
                 mNew.setCellValue(1, i, 1, if2.getOrderId(), null);
-                mNew.setCellValue(1, i, 2, ""+if2.getMw(), null);
-                mNew.setCellValue(1, i, 3, if2.getPurity() < 5 ? "Crude" : (">" + if2.getPurity()).replaceAll(".0", "%"), null);
-                mNew.setCellValue(1, i, 4, if2.getComments(), null);
+                mNew.setCellValue(1, i, 2, if2.getQuality() + "mg", null);
+                mNew.setCellValue(1, i, 3, ""+if2.getMw(), null);
+                mNew.setCellValue(1, i, 4, ("" + if2.getPurity()).replaceAll("\\.0", "%"), null);
                 mNew.setCellValue(1, i, 5, if2.getDate(), null);
-                //mNew.setCellValue(1, i, 6, if2.getGroup(), null);
                 mNew.setCellValue(1, i, 6, if2.getPackages(), null);
                 mNew.setCellValue(1, i, 7, if2.getCoordinate(), null);
+                mNew.setCellValue(1, i, 8, if2.getComments(), null);
                 ++i;
             }
         }
@@ -102,7 +100,7 @@ public class Control {
         long hisTime = history.lastModified();
         File backup = new File("nn_backup/" + history.getName());
         long backTime = backup.lastModified();
-        if ((backTime + 259200000) < hisTime) {// 如果3天没备份数据
+        if ((backTime + 172800000) < hisTime) {// 如果3天没备份数据
             try {
                 NnOther.nnBackup(mHistory.getUrl());
             } catch (IOException e) {
@@ -184,7 +182,6 @@ public class Control {
                     stockInfo.setAbs_quality(flag);
                     mNnStockInfo.addStockInfo(stockInfo);
                 }
-
             }
 
             try {
@@ -207,10 +204,8 @@ public class Control {
     // 从access获取库存信息
     private NnStockInfo.StockInfo getStockInfo(ResultSet resultHistory, NnPolypeptide nnHistoryPolypeptide) throws SQLException {
         NnStockInfo.StockInfo stockInfo = mNnStockInfo.makeStockInfo(nnHistoryPolypeptide);
-        String q = resultHistory.getString("quality");
-        double quality = q == null ? 0 : NnOther.getQuality(q.toCharArray());
-        stockInfo.setQuality(quality);
         String date = resultHistory.getString("_date");
+        stockInfo.setMw(resultHistory.getString("a_mw"));
         stockInfo.setDate(date);
         String packages = resultHistory.getString("package");
         stockInfo.setPackages(packages);
@@ -222,8 +217,9 @@ public class Control {
     // 从Access数据库获取多肽对象
     private NnPolypeptide getNnPolypeptideFromAccdb(ResultSet resultHistory) throws SQLException {
         NnPolypeptide nnHistoryPolypeptide = new NnPolypeptide(resultHistory.getString("orderId"), resultHistory.getString("sequence"));
+        nnHistoryPolypeptide.setQuality(resultHistory.getString("quality"));
         nnHistoryPolypeptide.setMw(resultHistory.getString("mw"));
-        nnHistoryPolypeptide.setPurity(resultHistory.getString("purity"));
+        nnHistoryPolypeptide.setPurity(resultHistory.getString("a_purity"));
         nnHistoryPolypeptide.setModification(resultHistory.getString("modification"));
         nnHistoryPolypeptide.setComments(resultHistory.getString("comments"));
         return nnHistoryPolypeptide;

@@ -5,7 +5,8 @@
 }
 
 .main_weighting {
-    -fx-background-image: url("/bg_weighting.png");
+    /*-fx-background-image: url("/bg_weighting.png");*/
+    -fx-background-color: #2d2d30;
     -fx-background-size: 430 331;
 }
 
@@ -76,11 +77,13 @@
 
 .text-area_main {
     -fx-border-radius: 8;
-    -fx-border-width: 2;
+    -fx-border-width: 1;
     -fx-background-insets: 1;
     -fx-border-color: rgba(255, 255, 255,0.8);
-    -fx-background-color: rgba(255, 255, 255, 0.8);
     -fx-background-radius: 8;
+    -fx-background-color: rgba(200, 200, 200, 0);
+    -fx-text-fill: #ffffff;
+    /*-fx-background-color: rgba(255, 255, 255, 0.8);*/
 }
 
 /* 滚动条样式 ================================================ */
@@ -115,7 +118,7 @@
 }
 
 .scroll-bar:horizontal .thumb, .scroll-bar:vertical .thumb {
-    -fx-background-color: rgba(0, 0, 0, 0.5);
+    -fx-background-color: rgba(255, 255, 255, 0.5);
     -fx-background-radius: 8em;
     -fx-border-radius: 8em;
     -fx-pref-height: 10px;

@@ -2,7 +2,6 @@ package com.nn.main;
 
 import com.nn.layout.MainController;
 import com.nn.layout.NnDragListener;
-import com.nn.layout.WeighingController;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -35,15 +34,17 @@ public class DataManager extends Application {
         if (startFlg) {// 如果是称量
             fxmlLoader = new FXMLLoader(getClass().getResource("/com/nn/layout/weighing_layout.fxml"));
             root = fxmlLoader.load();
-            scene = new Scene(root, 430, 330);
-            WeighingController controller = fxmlLoader.getController();
-            controller.setStage(primaryStage);
+            scene = new Scene(root, 730, 430);
+            primaryStage.setTitle("Inventories Management System");
         } else {// 其他打开查库存
             fxmlLoader = new FXMLLoader(getClass().getResource("/com/nn/layout/main_layout.fxml"));
             root = fxmlLoader.load();
             scene = new Scene(root, 360, 127);
             MainController controller = fxmlLoader.getController();
             controller.setStage(primaryStage);
+            primaryStage.setAlwaysOnTop(true);
+            NnDragListener.addNnDragListener(primaryStage, root);// 添加拖动监听
+            primaryStage.initStyle(StageStyle.TRANSPARENT);
         }
 
         root.setOnKeyPressed(event -> {
@@ -55,10 +56,6 @@ public class DataManager extends Application {
         scene.setFill(null);
         primaryStage.setScene(scene);
         primaryStage.getIcons().add(new Image("语文.png"));
-        primaryStage.initStyle(StageStyle.TRANSPARENT);
-        primaryStage.setAlwaysOnTop(true);
-
-        NnDragListener.addNnDragListener(primaryStage,root);// 添加拖动监听
 
         primaryStage.show();
 

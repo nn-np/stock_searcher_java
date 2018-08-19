@@ -9,11 +9,11 @@ import static java.lang.Math.abs;
  */
 public class NnPolypeptide {
     private String orderId;
-    private double purity;// 纯度
+    private double purity;// 纯度（如果是历史订单，这里是实际纯度）
     private String workNo;// work号
     private String sequence;// 氨基酸序列
     private double mw;// 分子量
-    private double quality;// 需要的质量
+    private double quality;// 需要的质量（如果是历史订单，这里是库存质量）
     private String modification;// 修饰
     private String comments;// 备注
 
@@ -65,7 +65,7 @@ public class NnPolypeptide {
             mw = -1;
             return;
         }
-        mw = getMaxValue(str.toCharArray());
+        mw = NnOther.getMaxValue(str.toCharArray());
     }
 
     public void setMw(double mw) {
@@ -77,35 +77,7 @@ public class NnPolypeptide {
             quality = -1;
             return;
         }
-        quality = getMaxValue(str.toCharArray());
-    }
-
-    // 得到字符串中的最大值
-    private double getMaxValue(char[] chars) {
-        double value = -1;
-
-        boolean flg = false;
-        char[] cs = null;
-        int i = 0;
-        for (char c : chars) {
-            if (!flg) {
-                cs = new char[chars.length];
-                flg = true;
-            }
-            if (c >= '0' && c <= '9' || c == '.') {
-                cs[i++] = c;
-                double d = Double.parseDouble(new String(cs));
-                if (value < d) {
-                    value = d;
-                }
-            } else {
-                if (i > 0) {
-                    flg = false;
-                    i = 0;
-                }
-            }
-        }
-        return value;
+        quality = NnOther.getMaxValue(str.toCharArray());
     }
 
     public void setQuality(double quality) {
@@ -118,18 +90,7 @@ public class NnPolypeptide {
             purity = -1;
             return;
         }
-        char[] chars = new char[str.length()];
-        int i = 0;
-        for (char c : str.toCharArray()) {
-            if (c >= '0' && c <= '9') {// 纯度没有小数点
-                chars[i++] = c;
-            }
-        }
-        if (i > 0) {
-            purity = Double.parseDouble(new String(chars));
-        } else {
-            purity = 1;
-        }
+        purity = NnOther.getMaxValue(str.toCharArray());
     }
 
     public void setPurity(double purity) {

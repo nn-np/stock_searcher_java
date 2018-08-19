@@ -22,18 +22,18 @@ public class NnOther {
     // 备份数据
     public static void nnBackup(String source, String dest) throws IOException {
         File sour = new File(source);
-        if(!sour.exists()) return;
+        if (!sour.exists()) return;
         File des;
         if (dest != null) {
             des = new File(dest);
         } else {
             des = new File("nn_backup");
             if (!des.isDirectory() && des.exists() && !des.delete()) return;
-            if(!des.mkdirs()) return;
+            if (!des.mkdirs()) return;
             des = new File("nn_backup/" + sour.getName());
         }
 
-        if(des.exists() && !des.delete()) return;
+        if (des.exists() && !des.delete()) return;
 
         Files.copy(sour.toPath(), des.toPath());
     }
@@ -45,23 +45,44 @@ public class NnOther {
     // 去掉不必要的字符，将所有库存加起来
     public static double getQuality(char[] chars) {
         double value = 0;
-        char[] chars1 = new char[chars.length];
-        int len = 0;
-        for (int i = 0; i < chars.length; ++i) {
-            char c = chars[i];
-            if (c >= '0' && c <= '9' || c == '.') {
-                chars1[len++] = c;
-            } else {
-                int len2 = chars.length - i - 1;
-                char[] chars2 = new char[len2];
-                for (int j = 0; j < len2; ++j) {
-                    ++i;
-                    chars2[j] = chars[i];
-                }
-                value += getQuality(chars2);
+        int len, index = 0;
+        for (len = 0; len < chars.length; ++len) {
+            char c = chars[len];
+            if ((c < '0' || c > '9') && c != '.') {
+                if (len > index)
+                    value += Double.parseDouble(new String(chars, index, len - index));
+                index = len + 1;
             }
         }
-        return value + (len > 0 ? Double.parseDouble(new String(chars1)) : 0);
+        return value + (len > index ? Double.parseDouble(new String(chars, index, len - index)) : 0);
+    }
+
+    // 得到字符串中的最大值
+    public static double getMaxValue(char[] chars) {
+        double value = -1;
+
+        boolean flg = false;
+        char[] cs = null;
+        int i = 0;
+        for (char c : chars) {
+            if (!flg) {
+                cs = new char[chars.length];
+                flg = true;
+            }
+            if (c >= '0' && c <= '9' || c == '.') {
+                cs[i++] = c;
+                double d = Double.parseDouble(new String(cs));
+                if (value < d) {
+                    value = d;
+                }
+            } else {
+                if (i > 0) {
+                    flg = false;
+                    i = 0;
+                }
+            }
+        }
+        return value;
     }
 
     // 弹出提示窗口

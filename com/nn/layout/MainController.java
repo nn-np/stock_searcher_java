@@ -4,7 +4,6 @@ import com.nn.data.NnOther;
 import com.nn.data.NnProperties;
 import com.nn.main.Control;
 import com.nn.main.NnListener;
-import com.nn.main.NnOnDragDropListener;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.scene.control.*;
@@ -42,13 +41,7 @@ public class MainController {
         }
 
         Platform.runLater(() -> {
-            try {
-                Thread.sleep(200);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
             tf_main.setFocusTraversable(false);
-            //initDragDrop();
             mNnOther.initDragDrop(root, url -> {
                 toStop();
                 String str = url.substring(url.lastIndexOf('.'));

@@ -39,8 +39,22 @@ public class NnExcelReader {
         this.url = url;
     }
 
+    public int getColumnIndex(int sheetIndex, int rowIndex, String cellStr) {
+        int index = -1;
+        Row row = getSheet(sheetIndex).getRow(rowIndex);
+        int count = row.getLastCellNum();
+        for (int i = 0; i < count; ++i) {
+            if (getCellString(rowIndex, i).equals(cellStr)) {
+                index = i;
+                break;
+            }
+        }
+        return index;
+    }
+
     public void createSheet(String s) {
-        mBook.removeSheetAt(1);
+        int index = mBook.getSheetIndex(s);
+        if (index > -1) mBook.removeSheetAt(index);
         mBook.createSheet(s);
     }
 

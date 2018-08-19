@@ -19,7 +19,7 @@ public class NnStockInfo {
         this.nnNewPolypeptide = nnPolypeptide;
         this.rowIndex = rowIndex;
         mStocks = new Vector<>();
-        abs_quality = error_abs_quality = 0;
+        error_abs_quality = 0;
     }
 
     public int getRowIndex() {
@@ -27,7 +27,7 @@ public class NnStockInfo {
     }
 
     public boolean isAvailable() {
-        return abs_quality + error_abs_quality > 0;
+        return (abs_quality + error_abs_quality) > 0;
     }
 
     public NnPolypeptide getNnNewPolypeptide() {
@@ -68,7 +68,7 @@ public class NnStockInfo {
             if (is > 0) {
                 str.append(" ||  ");
             }
-            if (!isError && stockInfo.modificationFlg) {// 无措，就把有有错的排除
+            if (!isError && stockInfo.modificationFlg) {// 无错，就把有有错的排除
                 str.append(stockInfo.getOrderId()).append(" ").append(stockInfo.getDate()).append(" ").append(stockInfo.getQuality()).append("mg");
             } else if (isError) {// 有错，就把有错的加上
                 str.append(stockInfo.getOrderId()).append(" ").append(stockInfo.getDate()).append(" ").append(stockInfo.getQuality()).append("mg");
@@ -103,7 +103,7 @@ public class NnStockInfo {
     public class StockInfo {
         private NnPolypeptide nnHistoryPolypeptide;// 历史订单多肽信息
         private String date;// 库存日期
-        private double quality;// 质量
+        private double mw;// 实际分子量
         private String packages;// 袋子
         private String coordinate;// 坐标
         boolean modificationFlg;// 修饰是否相同
@@ -141,10 +141,6 @@ public class NnStockInfo {
             this.date = date;
         }
 
-        public void setQuality(double quality) {
-            this.quality = quality;
-        }
-
         public void setPackages(String packages) {
             this.packages = packages;
         }
@@ -162,7 +158,7 @@ public class NnStockInfo {
         }
 
         public double getMw() {
-            return nnHistoryPolypeptide.getMw();
+            return mw;
         }
 
         public double getPurity() {
@@ -174,7 +170,7 @@ public class NnStockInfo {
         }
 
         public double getQuality() {
-            return quality;
+            return nnHistoryPolypeptide.getQuality();
         }
 
         public String getPackages() {
@@ -186,15 +182,19 @@ public class NnStockInfo {
         }
 
         public void setAbs_quality(int flag) {
-            this.abs_quality = quality / flag;
-        }
-
-        public double getAbs_quality() {
-            return abs_quality;
+            this.abs_quality = nnHistoryPolypeptide.getQuality() / flag;
         }
 
         public String getComments() {
             return nnHistoryPolypeptide.getComments();
+        }
+
+        public void setMw(String mw) {
+            if (mw == null || mw.equals("")) {
+                this.mw = -1;
+                return;
+            }
+            this.mw = NnOther.getMaxValue(mw.toCharArray());
         }
     }
 }

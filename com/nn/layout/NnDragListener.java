@@ -6,12 +6,12 @@ import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
 
 /**
- * 窗体拖动监听类
+ * 窗体拖动
  * 这里是大神的代码，值得借鉴
  * 果然是代码越简单粗暴越好用
  */
 
-public class NnDragListener{
+public class NnDragListener {
     private static double xOffset = 0, yOffset = 0;
     private static boolean dragging = false;
 
@@ -27,13 +27,8 @@ public class NnDragListener{
             stage.setX(event.getScreenX() - xOffset);
             stage.setY(event.getScreenY() - yOffset);
         });
-
         // 后面是我加的，用于检测是否是拖动
-        node.setOnMouseDragged(event -> {
-            if (event.getButton() == MouseButton.PRIMARY) {
-                dragging = true;
-            }
-        });
+        node.setOnMouseDragged(event -> dragging = event.getButton() == MouseButton.PRIMARY);
         node.setOnMouseReleased(event -> dragging = false);
     }
 }
