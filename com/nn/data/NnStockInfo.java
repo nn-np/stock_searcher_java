@@ -161,7 +161,7 @@ public class NnStockInfo {
             return mw;
         }
 
-        public double getPurity() {
+        public String getPurity() {
             return nnHistoryPolypeptide.getPurity();
         }
 

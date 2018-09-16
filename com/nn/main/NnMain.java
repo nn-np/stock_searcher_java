@@ -18,7 +18,7 @@ import javafx.stage.StageStyle;
  * @author 徐世宁
  */
 
-public class DataManager extends Application {
+public class NnMain extends Application {
     private static boolean startFlg = false;// 开始方法，如果是称量打开，则flg为true
     public static void main(String[] args) {
         startFlg = args.length > 0 && args[0].equals("weighting");
@@ -35,7 +35,7 @@ public class DataManager extends Application {
             fxmlLoader = new FXMLLoader(getClass().getResource("/com/nn/layout/weighing_layout.fxml"));
             root = fxmlLoader.load();
             scene = new Scene(root, 730, 430);
-            primaryStage.setTitle("Inventories Management System");
+            primaryStage.setTitle("Weighting Management System");
         } else {// 其他打开查库存
             fxmlLoader = new FXMLLoader(getClass().getResource("/com/nn/layout/main_layout.fxml"));
             root = fxmlLoader.load();

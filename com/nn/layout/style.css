@@ -5,9 +5,12 @@
 }
 
 .main_weighting {
-    /*-fx-background-image: url("/bg_weighting.png");*/
-    -fx-background-color: #2d2d30;
-    -fx-background-size: 430 331;
+    -fx-background-image: url("/bg_weighting.png");
+    /*-fx-background-color: #2d2d30;*/
+    /*-fx-background-size: 730 430;*/
+    -fx-background-position: center;
+    -fx-background-repeat: no-repeat;
+    -fx-background-size: cover;
 }
 
 .main_pop {
@@ -61,9 +64,26 @@
     -fx-background-radius: 12;
 }
 
+.left_ap {
+    -fx-background-color: rgba(255,255,255,0.2);
+}
 
 .label {
     -fx-background-color: rgba(200, 200, 200, 0);
+}
+
+.bt_output {
+    -fx-background-image: url("/output.png");
+    -fx-background-size: 27 27;
+    -fx-background-color: rgba(200, 200, 200, 0);
+    -fx-background-position: center center;
+}
+
+.bt_output:hover {
+    -fx-background-image: url("/output2.png");
+    -fx-background-size: 27 27;
+    -fx-background-color: rgba(200, 200, 200, 0);
+    -fx-background-position: center center;
 }
 
 .main_text_field {
@@ -77,13 +97,18 @@
 
 .text-area_main {
     -fx-border-radius: 8;
-    -fx-border-width: 1;
     -fx-background-insets: 1;
-    -fx-border-color: rgba(255, 255, 255,0.8);
     -fx-background-radius: 8;
     -fx-background-color: rgba(200, 200, 200, 0);
     -fx-text-fill: #ffffff;
+    /*-fx-border-color: rgba(255, 255, 255,0.8);
+    -fx-border-width: 1;*/
     /*-fx-background-color: rgba(255, 255, 255, 0.8);*/
+}
+
+.check-box {
+    -fx-text-fill: white;
+    -fx-padding: 0 25 0 0;
 }
 
 /* 滚动条样式 ================================================ */

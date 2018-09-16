@@ -7,10 +7,12 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.HBox;
 import javafx.stage.FileChooser;
 
 import javax.xml.stream.XMLStreamException;
@@ -26,11 +28,13 @@ public class WeighingController {
 
     private ObservableList<WeightingInfo> mData;
 
+    public HBox hb_bottom;
     public TextArea ta_weight_search;
     public TextArea tArea_weight;
     public AnchorPane root;
     public Button bt_submit;
     public TableView<WeightingInfo> w_tv;
+    private CheckBox checkBox;
 
     public WeighingController() {
         mNnOther = new NnOther();
@@ -43,12 +47,6 @@ public class WeighingController {
         }
         mManager = new WeightingManager();
         Platform.runLater(() -> {
-            initTableView(w_tv, mData);
-
-            //ta_weight_search.setFocusTraversable(false);
-            tArea_weight.setEditable(false);
-            mManager.setMessageBox(tArea_weight);
-            mManager.setSearchBox(ta_weight_search);
             mNnOther.initDragDrop(root, url -> {
                 String str = url.substring(url.lastIndexOf('.'));
                 if (str.equals(".xls") || str.equals(".xlsx")) {
@@ -59,6 +57,12 @@ public class WeighingController {
                     mNnOther.showInfo("提示！", "文件无效！");
                 }
             });
+
+            initTableView(w_tv, mData);
+            //ta_weight_search.setFocusTraversable(false);
+            tArea_weight.setEditable(false);
+            mManager.setMessageBox(tArea_weight);
+            mManager.setSearchBox(ta_weight_search);
         });
     }
 
@@ -75,12 +79,16 @@ public class WeighingController {
         w_tv.setItems(data);
     }
 
+    // 准备提交
     private void toSubmit() {
         bt_submit.setText("提交");
         mManager.setExcel(stockUrl);
         tArea_weight.setVisible(true);
         w_tv.setVisible(false);
         tArea_weight.setText(stockUrl + "\n");
+        checkBox = new CheckBox("更新坐标");
+        checkBox.setStyle("-fx-text-fill: white");
+        hb_bottom.getChildren().add(0, checkBox);
         submitFlg = 1;
     }
 
@@ -88,12 +96,17 @@ public class WeighingController {
         if (submitFlg == 0) {// 选择表格
             toSelectTable();
         } else if (submitFlg == 1) {// 提交信息
-            mManager.submit();
-            bt_submit.setText("选择");
-            submitFlg = 0;
+            mManager.submit(checkBox.isSelected());
+            toBegin();
         } else if (submitFlg == 2) {// 导出库存信息
             outPut();
         }
+    }
+
+    private void toBegin() {
+        bt_submit.setText("选择");
+        hb_bottom.getChildren().remove(0);
+        submitFlg = 0;
     }
 
     private void outPut() {

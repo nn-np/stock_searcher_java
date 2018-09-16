@@ -2,7 +2,7 @@ package com.nn.layout;
 
 import com.nn.data.NnOther;
 import com.nn.data.NnProperties;
-import com.nn.main.Control;
+import com.nn.main.StockSearcher;
 import com.nn.main.NnListener;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
@@ -19,7 +19,7 @@ public class MainController {
     private NnProperties mNnProperties;
     private NnOther mNnOther;
     private String news = null;
-    private Control mControl;
+    private StockSearcher mStockSearcher;
     private int isStart = 0;
 
     private Stage mStage;
@@ -91,10 +91,10 @@ public class MainController {
     public void start(ActionEvent event) {// 开始按钮事件
         if (isStart == 0) {
             toStart();
-            mControl = new Control(news, new OnNnListener());
+            mStockSearcher = new StockSearcher(news, new OnNnListener());
         } else if (isStart == 1) {
             toStop();
-            mControl.stop();
+            mStockSearcher.stop();
         } else if (isStart == 2) {
             toOpenTable();
         }
@@ -145,8 +145,8 @@ public class MainController {
     }
 
     public void close(ActionEvent event) {
-        if (mControl != null)
-            mControl.stop();
+        if (mStockSearcher != null)
+            mStockSearcher.stop();
         mStage.close();
     }
 

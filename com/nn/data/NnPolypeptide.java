@@ -90,6 +90,15 @@ public class NnPolypeptide {
             purity = -1;
             return;
         }
+        str = str.toLowerCase();
+        if (str.equals("crude")) {
+            purity = -1;
+            return;
+        }
+        if (str.equals("desalt")) {
+            purity = -2;
+            return;
+        }
         purity = NnOther.getMaxValue(str.toCharArray());
     }
 
@@ -121,8 +130,18 @@ public class NnPolypeptide {
         return orderId;
     }
 
-    public double getPurity() {
+    /*public double getPurity() {
         return purity;
+    }*/
+
+    public String getPurity() {
+        if (purity == -1) {
+            return "Crude";
+        }
+        if (purity == -2) {
+            return "Desalt";
+        }
+        return "" + purity;
     }
 
     public String getWorkNo() {

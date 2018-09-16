@@ -11,6 +11,7 @@ public class WeightingInfo {
     private String comments;// 备注
     private double a_purity;// 实际纯度
     private double a_mw;// 实际分子量
+    private String other;// 其他一些信息
     private boolean isAvailable = true;// 这条数据是否有效
     private boolean canDelete = false;// 这条数据是否可以从主表中删除
 
@@ -21,6 +22,14 @@ public class WeightingInfo {
         }
         this.orderId = orderId;
         date = packages = coordinate = group = cause = comments = "";
+    }
+
+    public String getOther() {
+        return other;
+    }
+
+    public void setOther(String other) {
+        this.other = other;
     }
 
     public String getComments() {

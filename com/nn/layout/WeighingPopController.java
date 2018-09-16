@@ -44,7 +44,7 @@ public class WeighingPopController {
                             ResultSet res = mAccdb.getResultSet("select * from stock_new left join history on stock_new.orderId = history.orderId and orderId = '" + info.getOrderId() + "'");
                             while (res.next()) {
                                 WeightingInfo info1 = new WeightingInfo(info.getOrderId());
-                                WeightingManager.setWeightingInfo(info1, res);
+                                WeightingManager.setWeightingInfo(info1, res,1);
                                 mData.add(info1);
                             }
                         } catch (SQLException e) {

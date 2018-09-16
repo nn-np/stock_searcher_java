@@ -14,7 +14,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Vector;
 
-public class Control {
+public class StockSearcher {
     private boolean isContinue = true;
     private NnExcelReader mNew;// 新单（这个是excel）
     private NnAccdbReader mHistory;// 历史订单
@@ -28,7 +28,7 @@ public class Control {
     // 已查到的库存数量：足够和量不足，搜索的条数，搜索的次数
     private int searchedCount, searchedTimes;
 
-    public Control(String news, NnListener nnListener) {
+    public StockSearcher(String news, NnListener nnListener) {
         mNnListener = nnListener;
         if (news == null || news.equals("")) {
             mNnListener.errorInfo("请先选择新单表格！");

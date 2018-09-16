@@ -35,4 +35,9 @@ public class NnAccdbReader {
         System.out.println(sql);
         return mStatement.execute(sql);
     }
+
+    public int executeUpdate(String sql) throws SQLException {
+        System.out.println(sql);
+        return mStatement.executeUpdate(sql);
+    }
 }
