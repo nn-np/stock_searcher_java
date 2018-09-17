@@ -112,7 +112,7 @@ public class WeightingManager {
             while (result.next()) {
                 WeightingInfo info = new WeightingInfo(str);
                 info.isCanDelete(false);
-                setWeightingInfo(info, result,2);
+                setWeightingInfo(info, result,4);
                 String message = (info.getDate() + " \t" + info.getOrderId() + " \t" + ("" + info.getA_purity()).replaceAll("\\.0", "") + "% \t" + info.getA_mw() + " \t" + info.getQuality() + "mg \t" +
                         info.getPackages() + " \t" + info.getCoordinate());
                 addMessage(message);
@@ -179,10 +179,10 @@ public class WeightingManager {
         info.setQuality((quality == null || quality.equals("")) ? 0 : NnOther.getQuality(quality.toCharArray()));
         if (info.canDelete()) {
             info.setCause(result.getString("cause"));
-        } else if (flg == 1) {
+        } else if (flg == 1 || flg == 4) {
             info.setCoordinate(result.getString("coordinate"));
         }
-        if (flg == 2) {
+        if (flg == 2 || flg == 4 || flg == 3) {
             info.setComments(result.getString("comments"));
         }
         if (flg == 0 || flg == 3) {
@@ -370,7 +370,6 @@ public class WeightingManager {
         return i;
     }
 
-    // TODO 临时表里也只能有一条库存，并且增加一列数据用来记录条数，增加一列用来记录备份，并且生成随机orderId（用当时系统时间）记录在备注里，
     private int deleteFromStockTemporary(WeightingInfo info) throws SQLException {
         // 没有坐标的情况是这个数据在临时表里，也有可能是用户忘记添加坐标（着一点要避免，这是错误操作）
         ResultSet resSet = mAccedb.getResultSet("select * from stock_temporary where orderId = '" + info.getOrderId() + "'");
