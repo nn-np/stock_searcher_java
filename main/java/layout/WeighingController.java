@@ -1,21 +1,27 @@
 package main.java.layout;
 
+import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
+import javafx.scene.input.KeyCode;
 import main.java.data.*;
 import main.java.start.WeightingManager;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
-import javafx.scene.control.Button;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.TableView;
-import javafx.scene.control.TextArea;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.stage.FileChooser;
 
 import javax.xml.stream.XMLStreamException;
+import java.awt.*;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.Transferable;
+import java.awt.datatransfer.UnsupportedFlavorException;
 import java.io.File;
 import java.io.IOException;
 
@@ -29,7 +35,7 @@ public class WeighingController {
     private ObservableList<WeightingInfo> mData;
 
     public HBox hb_bottom;
-    public TextArea ta_weight_search;
+    public TextField weight_tf;
     public TextArea tArea_weight;
     public AnchorPane root;
     public Button bt_submit;
@@ -57,13 +63,49 @@ public class WeighingController {
                     mNnOther.showInfo("提示！", "文件无效！");
                 }
             });
-
             initTableView(w_tv, mData);
-            //ta_weight_search.setFocusTraversable(false);
+            initTextField();
             tArea_weight.setEditable(false);
             mManager.setMessageBox(tArea_weight);
-            mManager.setSearchBox(ta_weight_search);
         });
+    }
+
+    private boolean isCtrl = false;// 检测CTRL键是否按下
+    private void initTextField() {
+        weight_tf.setOnKeyPressed(event -> {
+            if (event.getCode() == KeyCode.CONTROL) {
+                isCtrl = true;
+            }
+            if (isCtrl && event.getCode() == KeyCode.V) {
+                String str = getClipboard().replaceAll("\n", ",").replaceAll("\t", ",").replaceAll(" ", ",");
+                weight_tf.setText(str);
+                weight_tf.positionCaret(str.length());
+            }
+            if (event.getCode() == KeyCode.ENTER) {
+                _toSearch(weight_tf.getText().replaceAll(" ", ","));
+                weight_tf.clear();
+            }
+        });
+
+    }
+
+    private String getClipboard() {
+        String str = "";
+        // 获取系统剪贴板
+        Clipboard cb = Toolkit.getDefaultToolkit().getSystemClipboard();
+        // 获取剪贴板中的内容
+        Transferable tf = cb.getContents(null);
+        if (tf != null) {
+            // 判断剪贴板中的内容是否支持文本
+            if (tf.isDataFlavorSupported(DataFlavor.stringFlavor)) {
+                try {
+                    str = (String) tf.getTransferData(DataFlavor.stringFlavor);
+                } catch (UnsupportedFlavorException | IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return str;
     }
 
     public static void initTableView(TableView<WeightingInfo> w_tv,ObservableList<WeightingInfo> data) {
@@ -116,12 +158,22 @@ public class WeighingController {
         })).start();
     }
 
-    public void search(ActionEvent event) {
-        //tArea_weight.clear();
+    public void search() {
+        _toSearch(weight_tf.getText().replaceAll(" ", ","));
+    }
+
+    private void _toSearch(String str) {
+        if (str.equals("")) {
+            mNnOther.showInfo("提示！", "order ID不能为空！");
+            return;
+        }
+        if (str.charAt(str.length() - 1) != ',') {
+            str += ',';
+        }
         mData.clear();
         tArea_weight.setVisible(false);
         w_tv.setVisible(true);
-        mManager.search(() -> {
+        mManager.search(str,() -> {
             Platform.runLater(() -> bt_submit.setText("导出Excel表"));
             submitFlg = 2;
         }, mData);

@@ -3,9 +3,6 @@ package main.java.start;
 import main.java.data.*;
 import javafx.application.Platform;
 import javafx.collections.ObservableList;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.TextArea;
 
 import javax.xml.stream.XMLStreamException;
@@ -18,9 +15,6 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Vector;
 
-import main.java.layout.WeighingPopController;
-import javafx.scene.image.Image;
-import javafx.stage.Stage;
 import main.java.listener.NnMessageListener;
 
 public class WeightingManager {
@@ -32,10 +26,7 @@ public class WeightingManager {
 
     private String mDate;
 
-    private TextArea mSearchBox;
-    private Vector<WeightingInfo> mVector;
-
-    private Vector<WeightingInfo> vSelect;// 库存提交时如果一个orderId有两条库存就添加到这个数组里再处理
+    ObservableList<WeightingInfo> mData;
 
     public WeightingManager() {
         mOther = new NnOther();
@@ -60,10 +51,6 @@ public class WeightingManager {
         }
     }
 
-    public void setSearchBox(TextArea mSearchBox) {
-        this.mSearchBox = mSearchBox;
-    }
-
     public void setMessageBox(TextArea textField) {
         mMessageBox = textField;
     }
@@ -85,41 +72,36 @@ public class WeightingManager {
     public void submit(boolean isUpdate) {
         new Thread(() -> {
             toSubmit(isUpdate);
-            if (vSelect.size() > 0) {
-                addMessage(" ---其他 " + vSelect.size() + " 条");
-                toChoose();
-            }
         }).start();
     }
 
-    public void search(NnMessageListener m, ObservableList<WeightingInfo> mData) {
+    public void search(String str, NnMessageListener m, ObservableList<WeightingInfo> datas) {
+        this.mData = datas;
         new Thread(() -> {
             try {
-                toSearch(m, mData);
+                toSearch(str, m);
             } catch (SQLException e) {
                 e.printStackTrace();
             }
         }).start();
     }
 
-    private void toSearch(NnMessageListener m, ObservableList<WeightingInfo> mData) throws SQLException {
-        Vector<String> vector = getSearchStr();
+    private void toSearch(String strs, NnMessageListener m) throws SQLException {
+        Vector<String> vector = getSearchStr(strs);
         if (vector.size() < 1) {
             Platform.runLater(() -> mOther.showInfo("提示！", "orderId不能为空白！"));
             return;
         }
-        mVector = new Vector<>();
         for (String str : vector) {
             ResultSet result = mAccedb.getResultSet("select * from stock_new left join history on stock_new.orderId = history.orderId and orderId = '" + str + "'");
             int count = 0;
             while (result.next()) {
                 WeightingInfo info = new WeightingInfo(str);
                 info.isCanDelete(false);
-                setWeightingInfo(info, result,4);
+                setWeightingInfo(info, result, 4);
                 String message = (info.getDate() + " \t" + info.getOrderId() + " \t" + ("" + info.getA_purity()).replaceAll("\\.0", "") + "% \t" + info.getA_mw() + " \t" + info.getQuality() + "mg \t" +
                         info.getPackages() + " \t" + info.getCoordinate());
                 addMessage(message);
-                mVector.add(info);
                 mData.add(info);
                 ++count;
             }
@@ -127,9 +109,8 @@ public class WeightingManager {
             while (result.next()) {
                 WeightingInfo info = new WeightingInfo(str);
                 info.isCanDelete(true);
-                setWeightingInfo(info, result,2);
+                setWeightingInfo(info, result, 2);
                 addMessage(info.getDate() + " \t" + info.getOrderId() + " \t" + info.getCause() + " \t" + info.getQuality() + "mg");
-                mVector.add(info);
                 mData.add(info);
                 ++count;
             }
@@ -139,11 +120,10 @@ public class WeightingManager {
                 info.isCanDelete(false);
                 setWeightingInfo(info, result, 3);
                 addMessage(info.getDate() + " \t" + info.getOrderId() + " \t" + info.getCause() + " \t" + info.getQuality() + "mg");
-                mVector.add(info);
                 mData.add(info);
                 ++count;
             }
-            if (count < 0) {
+            if (count <= 0) {
                 WeightingInfo info = new WeightingInfo(str);
                 addMessage(str + "  无记录！");
                 info.setCause("无记录！");
@@ -151,32 +131,25 @@ public class WeightingManager {
             }
         }
         addMessage("\n");
-        if (mVector.size() > 0) {
+        if (mData.size() > 0) {
             m.send();
         }
     }
 
-    private Vector<String> getSearchStr() {
+    private Vector<String> getSearchStr(String strs) {
         Vector<String> vector = new Vector<>();
-        char[] chars = new char[240];
-        char[] strs = mSearchBox.getText().toCharArray();
-        int i = 0;
-        for (char c : strs) {
-            if (c != '\n' && c != '\t' && c != ' ') {
-                chars[i++] = c;
-            } else {
-                if (i > 0)
-                    vector.add(new String(chars, 0, i));
-                i = 0;
+        int i_1, i_2 = 0;
+        char[] chars = strs.toCharArray();
+        for (i_1 = 0; i_1 < chars.length; ++i_1) {
+            if (chars[i_1] == ',') {
+                vector.add(new String(chars, i_2, i_1 - i_2));
+                i_2 = i_1 + 1;
             }
-        }
-        if (i > 0) {
-            vector.add(new String(chars, 0, i));
         }
         return vector;
     }
 
-    public static void setWeightingInfo(WeightingInfo info, ResultSet result,int flg) throws SQLException {
+    public static void setWeightingInfo(WeightingInfo info, ResultSet result, int flg) throws SQLException {
         info.setDate(result.getString("_date"));
         String quality = result.getString("quality");// TODO 有时间这里优化下
         info.setQuality((quality == null || quality.equals("")) ? 0 : NnOther.getQuality(quality.toCharArray()));
@@ -204,7 +177,6 @@ public class WeightingManager {
 
     private void toSubmit(boolean isUpdate) {// 有无坐标
         add = delete = update = 0;
-        vSelect = new Vector<>();
         int rowSize = mExcel.getRowSize();
         for (int i = 1; i < rowSize; ++i) {
             WeightingInfo info = getInfoFromExcel(i);
@@ -260,7 +232,7 @@ public class WeightingManager {
             ResultSet res = mAccedb.getResultSet("select * from stock_new where coordinate = '" + info.getOther() + "'");
             if (res.next()) {
                 WeightingInfo l_info = new WeightingInfo(res.getString("orderId"));// 这里需要从数据库里读取数据，不能用excel里的，因为不全
-                setWeightingInfo(l_info, res,1);
+                setWeightingInfo(l_info, res, 1);
                 l_info.setCoordinate(info.getCoordinate());
                 if (insertStockNew(l_info) > 0) {
                     if (_deleteFromStockNew(info.getOther()) > 0) {
@@ -277,7 +249,7 @@ public class WeightingManager {
             if (res.next()) {// 如果有临时的库存
                 WeightingInfo l_info = new WeightingInfo(res.getString("orderId"));
                 l_info.setCoordinate(info.getCoordinate());
-                setWeightingInfo(l_info, res,0);
+                setWeightingInfo(l_info, res, 0);
                 if (insertStockNew(l_info) > 0) {
                     mAccedb.execute("delete from stock_temporary where orderId = '" + l_info.getOrderId() + "'");
                     str += "已添加 " + info.getOrderId() + "  " + info.getCoordinate();
@@ -303,8 +275,6 @@ public class WeightingManager {
             if (flg == 1) {
                 str += "已移除";
                 ++delete;
-            } else if (flg > 1) {
-                str += "共 " + flg + " 条库存，另处理";
             } else if (flg == 0) {
                 str += "无记录，移除失败";
             }
@@ -313,6 +283,7 @@ public class WeightingManager {
         }
         addMessage(info.getCause() + "\t" + str + "\n");
     }
+
     // 向stock_new中添加数据
     private int insertStockNew(WeightingInfo info) throws SQLException {
         int i = mAccedb.executeUpdate("insert into stock_new values('" + info.getDate() + "','" + info.getGroup() + "','" + info.getOrderId() + "','" + info.getQuality() + "','" + info.getA_purity() + "','"
@@ -378,43 +349,10 @@ public class WeightingManager {
         // 没有坐标的情况是这个数据在临时表里，也有可能是用户忘记添加坐标（着一点要避免，这是错误操作）
         ResultSet resSet = mAccedb.getResultSet("select * from stock_temporary where orderId = '" + info.getOrderId() + "'");
         if (resSet.next()) {
-            /*int count = resSet.getInt("count");
-            if (count > 1) {// 如果有多条
-                return mAccedb.executeUpdate("update stock_temporary set count = " + (--count) + " where orderId = '" + info.getOrderId() + "'");
-            } else if (count == 1) {// 如果只有一条*/
             updateStockOld(resSet, info.getCause());
-             /*String comment = resSet.getString("comment");
-               if (comment != null && !comment.equals("")) {// TOD 删除其他信息，搜索的时候如果库存大于1，也要注意
-                }*/
             return mAccedb.executeUpdate("delete from stock_temporary where orderId = '" + info.getOrderId() + "'");
-            //}
         }
         return 0;// 如果临时表里没有，就去有坐标的表里找？还是不要，不然会乱套
-    }
-
-    private void toChoose() {
-        Platform.runLater(() -> {
-            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/main/java/layout/weighing_popwindow.fxml"));
-            try {
-                Parent root = fxmlLoader.load();
-                WeighingPopController controller = fxmlLoader.getController();
-                controller.setVector(vSelect);
-                controller.setNnAccdb(mAccedb);
-
-                Scene scene = new Scene(root, 430, 230);
-
-                Stage stage = new Stage();
-                stage.setScene(scene);
-                stage.setTitle("选择要移除的库存");
-                stage.getIcons().add(new Image("语文.png"));
-
-                controller.setStage(stage);
-
-                stage.show();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        });
     }
 
     private WeightingInfo getInfoFromExcel(int i) {
@@ -452,7 +390,7 @@ public class WeightingManager {
                 .setCellValue(0, 4, "实际分子量").setCellValue(0, 5, "坐标").setCellValue(0, 6, "袋")
                 .setCellValue(0, 9, "备注").setCellValue(0, 8, "原因").setCellValue(0, 7, "组别");
         int i = 1;
-        for (WeightingInfo info : mVector) {
+        for (WeightingInfo info : mData) {
             reader.setCellValue(i, 0, info.getDate());
             reader.setCellValue(i, 1, info.getOrderId());
             reader.setCellValue(i, 2, info.getQuality() + "mg");
