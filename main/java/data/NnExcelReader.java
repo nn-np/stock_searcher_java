@@ -6,7 +6,6 @@ import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.*;
-import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 
 /**
@@ -80,7 +79,6 @@ public class NnExcelReader {
         return getRowSize(0);
     }
 
-
     /**
      * @param sheetIndex 第几个表格
      * @param x          第几行
@@ -119,7 +117,7 @@ public class NnExcelReader {
                     // TODO 这里的日期格式写死了，M/d/yyyy，以后为了复用可以不用写死
                     return new SimpleDateFormat("M/d/yyyy").format(cell.getDateCellValue());
                 }
-                return new DecimalFormat("0.000").format(cell.getNumericCellValue());
+                return "" + cell.getNumericCellValue();
             case STRING:
                 return cell.getStringCellValue();
             default:

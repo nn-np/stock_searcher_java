@@ -26,7 +26,7 @@ public class WeightingManager {
 
     private String mDate;
 
-    ObservableList<WeightingInfo> mData;
+    private ObservableList<WeightingInfo> mData;
 
     public WeightingManager() {
         mOther = new NnOther();
@@ -70,13 +70,15 @@ public class WeightingManager {
 
 
     public void submit(boolean isUpdate) {
-        new Thread(() -> {
-            toSubmit(isUpdate);
-        }).start();
+        new Thread(() -> toSubmit(isUpdate)).start();
     }
 
-    public void search(String str, NnMessageListener m, ObservableList<WeightingInfo> datas) {
+
+    public void setData(ObservableList<WeightingInfo> datas) {
         this.mData = datas;
+    }
+
+    public void search(String str, NnMessageListener m) {
         new Thread(() -> {
             try {
                 toSearch(str, m);
@@ -99,9 +101,6 @@ public class WeightingManager {
                 WeightingInfo info = new WeightingInfo(str);
                 info.isCanDelete(false);
                 setWeightingInfo(info, result, 4);
-                String message = (info.getDate() + " \t" + info.getOrderId() + " \t" + ("" + info.getA_purity()).replaceAll("\\.0", "") + "% \t" + info.getA_mw() + " \t" + info.getQuality() + "mg \t" +
-                        info.getPackages() + " \t" + info.getCoordinate());
-                addMessage(message);
                 mData.add(info);
                 ++count;
             }
@@ -110,7 +109,6 @@ public class WeightingManager {
                 WeightingInfo info = new WeightingInfo(str);
                 info.isCanDelete(true);
                 setWeightingInfo(info, result, 2);
-                addMessage(info.getDate() + " \t" + info.getOrderId() + " \t" + info.getCause() + " \t" + info.getQuality() + "mg");
                 mData.add(info);
                 ++count;
             }
@@ -119,18 +117,15 @@ public class WeightingManager {
                 WeightingInfo info = new WeightingInfo(str);
                 info.isCanDelete(false);
                 setWeightingInfo(info, result, 3);
-                addMessage(info.getDate() + " \t" + info.getOrderId() + " \t" + info.getCause() + " \t" + info.getQuality() + "mg");
                 mData.add(info);
                 ++count;
             }
             if (count <= 0) {
                 WeightingInfo info = new WeightingInfo(str);
-                addMessage(str + "  无记录！");
                 info.setCause("无记录！");
                 mData.add(info);
             }
         }
-        addMessage("\n");
         if (mData.size() > 0) {
             m.send();
         }
@@ -142,34 +137,32 @@ public class WeightingManager {
         char[] chars = strs.toCharArray();
         for (i_1 = 0; i_1 < chars.length; ++i_1) {
             if (chars[i_1] == ',') {
-                vector.add(new String(chars, i_2, i_1 - i_2));
+                if(i_1 != i_2 )
+                    vector.add(new String(chars, i_2, i_1 - i_2));
                 i_2 = i_1 + 1;
             }
         }
         return vector;
     }
 
+    // 从数据库读取数据，数据库中数字都是该有的格式
     public static void setWeightingInfo(WeightingInfo info, ResultSet result, int flg) throws SQLException {
         info.setDate(result.getString("_date"));
-        String quality = result.getString("quality");// TODO 有时间这里优化下
-        info.setQuality((quality == null || quality.equals("")) ? 0 : NnOther.getQuality(quality.toCharArray()));
+        info.setQuality(result.getFloat("quality"));
         if (info.canDelete()) {
             info.setCause(result.getString("cause"));
         } else if (flg == 1 || flg == 4) {
             info.setCoordinate(result.getString("coordinate"));
         }
         if (flg == 2 || flg == 4 || flg == 3) {
+            info.setWorkNo(result.getLong("workNo"));
             info.setComments(result.getString("comments"));
         }
         if (flg == 0 || flg == 3) {
             info.setPackages(result.getString("package"));
         }
-        String string = result.getString("a_purity");
-        double p = Double.parseDouble((string == null || string.equals("")) ? "0" : string);
-        p *= p < 1 ? 100 : 1;
-        info.setA_purity(p);
-        string = result.getString("a_mw");
-        info.setA_mw(Double.parseDouble((string == null || string.equals("")) ? "0" : string));
+        info.setPurity(result.getFloat("a_purity"));
+        info.setMw(result.getFloat("a_mw"));
         info.setGroup(result.getString("group"));
     }
 
@@ -183,38 +176,40 @@ public class WeightingManager {
             if (!info.isAvailable()) {// do something or not
                 continue;
             }
+            String str = info.getOrderId() + "\t";
             if (info.canDelete()) {
-                _toDelete(info);
+                str += _toDelete(info);
             } else {
-                _toUpdate(info, isUpdate);
+                str += _toUpdate(info, isUpdate);
             }
+            addMessage(str + "\n");
         }
         addMessage("\n总计：---添加 " + add + " 条 ---移除 " + delete + " 条 ---修改 " + update + " 条");
     }
 
-    private void _toUpdate(WeightingInfo info, boolean isUpdate) {
-        String str = info.getOrderId() + "\t";
+    private String _toUpdate(WeightingInfo info, boolean isUpdate) {
+        String str = "";
         if (isUpdate) {// 如果需要更新坐标，一种是已经有坐标，更换坐标，一种是没有坐标，添加坐标（直接向sock_new 添加，删除stock_temporary里相关数据）
             try {
-                str = updateCoordinate(info);
+                str += updateCoordinate(info);
             } catch (SQLException e) {
-                str += info.getCoordinate() + "坐标已存在或其他原因，更新失败";
+                str += info.getCoordinate() + "未知原因，更新失败";
                 e.printStackTrace();
             }
         } else {
             try {
                 if (insertStock(info) > 0) {
-                    str += info.getPackages() + "\t" + info.getCoordinate() + "\t添加成功";
+                    str += info.getQualityStr() + "\t" + info.getPurityStr() + "\t" + info.getMw() + "\t" + info.getPackages() + "  " + info.getCoordinate() + "\t添加成功";
                     ++add;
                 } else {
-                    str += "更新或添加失败";
+                    str += "添加失败";
                 }
             } catch (SQLException e) {
-                str += "更新或添加失败";
+                str += "坐标已存在，添加失败";
                 e.printStackTrace();
             }
         }
-        addMessage(info.getQuality() + "mg\t" + info.getA_purity() + "\t" + info.getA_mw() + "\t" + info.getCoordinate() + "\t" + str + "\n");
+        return str;
     }
 
     private int insertStock(WeightingInfo info) throws SQLException {
@@ -237,6 +232,7 @@ public class WeightingManager {
                 if (insertStockNew(l_info) > 0) {
                     if (_deleteFromStockNew(info.getOther()) > 0) {
                         str += info.getOther() + " -> " + info.getCoordinate() + " 成功";
+                        ++update;
                     }
                 } else {
                     str += info.getOther() + "更新失败";
@@ -252,11 +248,13 @@ public class WeightingManager {
                 setWeightingInfo(l_info, res, 0);
                 if (insertStockNew(l_info) > 0) {
                     mAccedb.execute("delete from stock_temporary where orderId = '" + l_info.getOrderId() + "'");
-                    str += "已添加 " + info.getOrderId() + "  " + info.getCoordinate();
+                    str += "已添加 " + "  " + info.getCoordinate();
+                    ++update;
                 }
             } else {// 如果没有，直接添加
                 if (insertStockNew(info) > 0) {
-                    str += "已添加 " + info.getOrderId() + "  " + info.getCoordinate();
+                    str += "已添加 " + "  " + info.getCoordinate();
+                    ++add;
                 }
             }
         }
@@ -264,16 +262,16 @@ public class WeightingManager {
     }
 
     private int insertStockTemporary(WeightingInfo info) throws SQLException {
-        return mAccedb.executeUpdate("insert into stock_temporary values('" + mDate + "','" + info.getGroup() + "','" + info.getOrderId() + "','" + info.getQuality() + "','" + info.getA_purity() + "','"
-                + info.getA_mw() + "','" + info.getPackages() + "')");
+        return mAccedb.executeUpdate("insert into stock_temporary values('" + mDate + "','" + info.getGroup() + "','" + info.getOrderId() + "'," + info.getQuality() + "," + info.getPurity() + ","
+                + info.getMw() + ",'" + info.getPackages() + "')");
     }
 
-    private void _toDelete(WeightingInfo info) {
-        String str = info.getOrderId() + "\t";
+    private String _toDelete(WeightingInfo info) {
+        String str = "";
         try {
             int flg = deleteFormStock(info);
             if (flg == 1) {
-                str += "已移除";
+                str += info.getCause() + "\t已移除";
                 ++delete;
             } else if (flg == 0) {
                 str += "无记录，移除失败";
@@ -281,13 +279,13 @@ public class WeightingManager {
         } catch (SQLException e) {
             str += "未知原因，移除失败";
         }
-        addMessage(info.getCause() + "\t" + str + "\n");
+        return str;
     }
 
     // 向stock_new中添加数据
     private int insertStockNew(WeightingInfo info) throws SQLException {
-        int i = mAccedb.executeUpdate("insert into stock_new values('" + info.getDate() + "','" + info.getGroup() + "','" + info.getOrderId() + "','" + info.getQuality() + "','" + info.getA_purity() + "','"
-                + info.getA_mw() + "','" + info.getCoordinate() + "')");
+        int i = mAccedb.executeUpdate("insert into stock_new values('" + info.getDate() + "','" + info.getGroup() + "','" + info.getOrderId() + "'," + info.getQuality() + "," + info.getPurity() + ","
+                + info.getMw() + ",'" + info.getCoordinate() + "')");
         if (i > 0) {
             String plate = info.getCoordinate().substring(0, info.getCoordinate().lastIndexOf('-'));
             String coo = info.getCoordinate().substring(info.getCoordinate().lastIndexOf('-') + 1);
@@ -355,24 +353,23 @@ public class WeightingManager {
         return 0;// 如果临时表里没有，就去有坐标的表里找？还是不要，不然会乱套
     }
 
+    // 从excel获取数据
     private WeightingInfo getInfoFromExcel(int i) {
-        String orderId = mExcel.getCellString(i, 0).replaceAll(" ", "").replaceAll("\\.0+", "");
-        WeightingInfo info = new WeightingInfo(orderId);
+        WeightingInfo info = new WeightingInfo(mExcel.getCellString(i, 0));
         if (!info.isAvailable()) return info;// 无效
-        String cause = mExcel.getCellString(i, 6).replaceAll(" ", "");
-        info.setCause(cause);
+        info.setCause(mExcel.getCellString(i, 6));
         info.setCoordinate(mExcel.getCellString(i, 4));
         if (info.canDelete()) { // 有原因，从表中删除，注意区分
             return info;
         }
         info.setDate(mDate);
-        info.setQuality(NnOther.getQuality(mExcel.getCellString(i, 1).toCharArray()));
-        info.setA_purity(NnOther.getMaxValue(mExcel.getCellString(i, 2).toCharArray()));
-        info.setA_mw(Double.parseDouble(mExcel.getCellString(i, 3)));
+        info.setQuality(mExcel.getCellString(i, 1));
+        info.setPurity(mExcel.getCellString(i, 2));
+        info.setMw(mExcel.getCellString(i, 3));
         info.setGroup(mExcel.getCellString(i, 5));
         info.setOther(mExcel.getCellString(i, 7));
 
-        System.out.println(info.getOrderId() + "\t" + info.getCause() + "\t" + info.getA_purity() + "\t" + info.getA_mw() + "\t" + info.getQuality() + "\t" +
+        System.out.println(info.getOrderId() + "\t" + info.getCause() + "\t" + info.getPurityStr() + "\t" + info.getMw() + "\t" + info.getQuality() + "\t" +
                 info.getCoordinate() + "\t" + info.getPackages() + "\t" + info.getGroup());
 
         return info;
@@ -393,9 +390,9 @@ public class WeightingManager {
         for (WeightingInfo info : mData) {
             reader.setCellValue(i, 0, info.getDate());
             reader.setCellValue(i, 1, info.getOrderId());
-            reader.setCellValue(i, 2, info.getQuality() + "mg");
-            reader.setCellValue(i, 3, "" + info.getA_purity() + '%');
-            reader.setCellValue(i, 4, "" + info.getA_mw());
+            reader.setCellValue(i, 2, info.getQualityStr());
+            reader.setCellValue(i, 3, "" + info.getPurityStr());
+            reader.setCellValue(i, 4, "" + info.getMw());
             reader.setCellValue(i, 9, "" + info.getComments());
             reader.setCellValue(i, 8, "" + info.getCause());
             reader.setCellValue(i, 7, "" + info.getGroup());

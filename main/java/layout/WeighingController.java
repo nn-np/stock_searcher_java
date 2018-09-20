@@ -10,7 +10,6 @@ import main.java.start.WeightingManager;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.event.ActionEvent;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
@@ -52,6 +51,7 @@ public class WeighingController {
             e.printStackTrace();
         }
         mManager = new WeightingManager();
+        mManager.setData(mData);
         Platform.runLater(() -> {
             mNnOther.initDragDrop(root, url -> {
                 String str = url.substring(url.lastIndexOf('.'));
@@ -128,13 +128,17 @@ public class WeighingController {
         tArea_weight.setVisible(true);
         w_tv.setVisible(false);
         tArea_weight.setText(stockUrl + "\n");
-        checkBox = new CheckBox("更新坐标");
-        checkBox.setStyle("-fx-text-fill: white");
+        if (checkBox == null) {
+            checkBox = new CheckBox("更新坐标");
+            checkBox.setStyle("-fx-text-fill: white");
+        }
+        checkBox.setSelected(false);
+        hb_bottom.getChildren().remove(checkBox);
         hb_bottom.getChildren().add(0, checkBox);
         submitFlg = 1;
     }
 
-    public void submit(ActionEvent event) {
+    public void submit() {
         if (submitFlg == 0) {// 选择表格
             toSelectTable();
         } else if (submitFlg == 1) {// 提交信息
@@ -147,7 +151,7 @@ public class WeighingController {
 
     private void toBegin() {
         bt_submit.setText("选择");
-        hb_bottom.getChildren().remove(0);
+        hb_bottom.getChildren().remove(checkBox);
         submitFlg = 0;
     }
 
@@ -176,7 +180,7 @@ public class WeighingController {
         mManager.search(str,() -> {
             Platform.runLater(() -> bt_submit.setText("导出Excel表"));
             submitFlg = 2;
-        }, mData);
+        });
     }
 
     private void toSelectTable() {
@@ -207,7 +211,7 @@ public class WeighingController {
     }
 
     // 导出坐标
-    public void outputCoo(ActionEvent event) {
+    public void outputCoo() {
         mManager.outputCoo();
     }
 }

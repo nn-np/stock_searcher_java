@@ -60,7 +60,6 @@ public class NnOther {
     // 得到字符串中的最大值
     public static double getMaxValue(char[] chars) {
         double value = -1;
-
         boolean flg = false;
         char[] cs = null;
         int i = 0;

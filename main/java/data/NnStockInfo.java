@@ -162,7 +162,7 @@ public class NnStockInfo {
         }
 
         public String getPurity() {
-            return nnHistoryPolypeptide.getPurity();
+            return nnHistoryPolypeptide.getPurityStr();
         }
 
         public String getDate() {
@@ -198,5 +198,3 @@ public class NnStockInfo {
         }
     }
 }
-
-
