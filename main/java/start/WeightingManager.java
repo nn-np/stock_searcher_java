@@ -9,6 +9,7 @@ import javax.xml.stream.XMLStreamException;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
@@ -426,7 +427,7 @@ public class WeightingManager {
                 NnCoordinate nnCoordinate;
                 while (res.next()) {
                     nnCoordinate = new NnCoordinate(res.getString("plate"), res.getString("coo"));
-                    out.write((nnCoordinate.getCoosString() + '\n').getBytes());
+                    out.write((nnCoordinate.getCoosString() + '\n').getBytes("GBK"));
                 }
                 out.flush();
                 out.close();
