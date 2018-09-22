@@ -63,6 +63,18 @@ public class NnCoordinate {
     public String getCoosString() {
         int counts = size == 2 ? 100 : 220;
         StringBuilder builder = new StringBuilder();
+        builder.append(plate).append(',').append(count).append(',');
+        for (int i = 0; i < counts; ++i) {
+            if ((coos[i / 64] & (1L << (i % 64))) != 0) {
+                builder.append(_toString(i)).append(',');
+            }
+        }
+        return builder.toString();
+    }
+
+    /*public String getCoosString() {
+        int counts = size == 2 ? 100 : 220;
+        StringBuilder builder = new StringBuilder();
         builder.append(plate).append(',');
         for (int i = 0; i < counts; ++i) {
             int f_1 = i % 64;
@@ -74,8 +86,8 @@ public class NnCoordinate {
             }
             builder.append(',');
         }
-        return builder.toString();
-    }
+        return builder.toString().replaceAll("\n,{11}", "");
+    }*/
 
     // 统计坐标个数
     private void initCount() {

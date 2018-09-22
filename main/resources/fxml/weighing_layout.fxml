@@ -19,7 +19,7 @@
             <children>
                 <HBox maxHeight="68.0" minHeight="68.0" prefHeight="68.0" prefWidth="600.0" styleClass="left_ap" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="10.0">
                     <children>
-                  <TextField fx:id="weight_tf" styleClass="main_text_field" HBox.hgrow="ALWAYS">
+                  <TextField fx:id="weight_tf" promptText="order ID" styleClass="main_text_field" HBox.hgrow="ALWAYS">
                      <HBox.margin>
                         <Insets bottom="20.0" left="45.0" right="10.0" top="20.0" />
                      </HBox.margin></TextField>
@@ -54,19 +54,27 @@
     </center>
     <left>
         <AnchorPane prefHeight="200.0" prefWidth="40.0" styleClass="left_ap">
-            <VBox AnchorPane.leftAnchor="6.0" AnchorPane.rightAnchor="6.0" BorderPane.alignment="CENTER">
+            <VBox alignment="TOP_CENTER" AnchorPane.leftAnchor="2.0" AnchorPane.rightAnchor="2.0" BorderPane.alignment="CENTER">
                 <children>
-                    <Button maxHeight="27.0" maxWidth="27.0" minHeight="27.0" minWidth="27.0" mnemonicParsing="false" onAction="#outputCoo" prefHeight="27.0" prefWidth="27.0" styleClass="bt_output">
+                    <Button maxHeight="29.0" maxWidth="29.0" minHeight="29.0" minWidth="29.0" mnemonicParsing="false" onAction="#outputCoo" prefHeight="29.0" prefWidth="29.0" styleClass="bt_output">
                         <VBox.margin>
                             <Insets top="27.0" />
                         </VBox.margin>
                     </Button>
-               <Label alignment="CENTER" contentDisplay="CENTER" maxWidth="1.7976931348623157E308" minWidth="-Infinity" text="坐标" textAlignment="CENTER" textFill="WHITE" textOverrun="CENTER_ELLIPSIS">
+               <Label alignment="TOP_CENTER" contentDisplay="CENTER" maxWidth="1.7976931348623157E308" minWidth="-Infinity" text="坐标" textAlignment="CENTER" textFill="WHITE" textOverrun="CENTER_ELLIPSIS">
                   <VBox.margin>
                      <Insets />
                   </VBox.margin>
                   <font>
-                     <Font size="11.0" />
+                     <Font size="9.0" />
+                  </font></Label>
+               <Button maxHeight="29.0" maxWidth="29.0" minHeight="29.0" minWidth="29.0" mnemonicParsing="false" onAction="#bu_tag" prefHeight="29.0" prefWidth="29.0" styleClass="bt_tag">
+                  <VBox.margin>
+                     <Insets top="5.0" />
+                  </VBox.margin></Button>
+               <Label alignment="TOP_CENTER" contentDisplay="CENTER" maxWidth="1.7976931348623157E308" minWidth="-Infinity" text="标签" textAlignment="CENTER" textFill="WHITE" textOverrun="CENTER_ELLIPSIS">
+                  <font>
+                     <Font size="9.0" />
                   </font></Label>
                 </children>
             </VBox>

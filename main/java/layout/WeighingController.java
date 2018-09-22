@@ -1,5 +1,6 @@
 package main.java.layout;
 
+import javafx.event.ActionEvent;
 import javafx.scene.control.*;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextArea;
@@ -213,5 +214,9 @@ public class WeighingController {
     // 导出坐标
     public void outputCoo() {
         mManager.outputCoo();
+    }
+
+    // 标签操作
+    public void bu_tag(ActionEvent event) {
     }
 }

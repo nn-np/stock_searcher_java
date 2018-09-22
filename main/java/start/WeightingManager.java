@@ -425,6 +425,7 @@ public class WeightingManager {
                 FileOutputStream out = new FileOutputStream(url1);
                 ResultSet res = mAccedb.getResultSet("select * from coo order by count desc");
                 NnCoordinate nnCoordinate;
+                out.write("板,空位,坐标...\n".getBytes("GBK"));
                 while (res.next()) {
                     nnCoordinate = new NnCoordinate(res.getString("plate"), res.getString("coo"));
                     out.write((nnCoordinate.getCoosString() + '\n').getBytes("GBK"));

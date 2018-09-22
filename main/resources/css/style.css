@@ -48,7 +48,7 @@
     -fx-border-radius: 12;
     -fx-border-width: 2;
     -fx-background-insets: 1;
-    -fx-border-color: rgb(208, 58, 15);
+    -fx-border-color: rgb(212, 35, 122);
     -fx-background-color: rgba(255, 255, 255, 0.8);
     -fx-background-radius: 12;
 }
@@ -72,21 +72,42 @@
 
 .bt_output {
     -fx-background-image: url("/main/resources/image/output.png");
-    -fx-background-size: 27 27;
+    -fx-background-size: 29 29;
     -fx-background-color: rgba(200, 200, 200, 0);
     -fx-background-position: center center;
 }
 
 .bt_output:hover {
     -fx-background-image: url("/main/resources/image/output2.png");
-    -fx-background-size: 27 27;
+    -fx-background-size: 29 29;
     -fx-background-color: rgba(200, 200, 200, 0);
     -fx-background-position: center center;
 }
 
 .bt_output:pressed {
     -fx-background-image: url("/main/resources/image/output2.png");
-    -fx-background-size: 24 24;
+    -fx-background-size: 27 27;
+    -fx-background-color: rgba(200, 200, 200, 0);
+    -fx-background-position: center center;
+}
+
+.bt_tag {
+    -fx-background-image: url("/main/resources/image/tag.png");
+    -fx-background-size: 29 29;
+    -fx-background-color: rgba(200, 200, 200, 0);
+    -fx-background-position: center center;
+}
+
+.bt_tag:hover {
+    -fx-background-image: url("/main/resources/image/tag2.png");
+    -fx-background-size: 29 29;
+    -fx-background-color: rgba(200, 200, 200, 0);
+    -fx-background-position: center center;
+}
+
+.bt_tag:pressed {
+    -fx-background-image: url("/main/resources/image/tag2.png");
+    -fx-background-size: 27 27;
     -fx-background-color: rgba(200, 200, 200, 0);
     -fx-background-position: center center;
 }
