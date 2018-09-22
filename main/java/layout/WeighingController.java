@@ -216,7 +216,7 @@ public class WeighingController {
         mManager.outputCoo();
     }
 
-    // 标签操作
+    // 标签操作，在本地操作
     public void bu_tag(ActionEvent event) {
     }
 }
