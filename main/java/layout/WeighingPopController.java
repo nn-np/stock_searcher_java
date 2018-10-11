@@ -51,7 +51,7 @@ public class WeighingPopController {
                             e.printStackTrace();
                         }
                     }
-                    WeighingController.initTableView(we_pop_tv, mData);
+                    WeightingController.initTableView(we_pop_tv, mData);
                     we_pop_tv.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
                 })
         ).start();

@@ -15,6 +15,7 @@ import javax.xml.stream.XMLStreamException;
 import java.io.File;
 import java.io.IOException;
 
+// TODO 添加搜索完成后保存文件的路径，自动保存
 public class MainController {
     private NnProperties mNnProperties;
     private NnOther mNnOther;
@@ -30,6 +31,7 @@ public class MainController {
     public Label label;
     public Button bt_select;
     public TextField tf_main;
+    public Label nnns;
 
     public MainController() {
         mNnOther = new NnOther();
@@ -41,6 +43,7 @@ public class MainController {
         }
 
         Platform.runLater(() -> {
+            nnns.setText(mNnOther.getVersion());
             tf_main.setFocusTraversable(false);
             mNnOther.initDragDrop(root, url -> {
                 toStop();
@@ -101,9 +104,8 @@ public class MainController {
     }
 
     private void toOpenTable() {// 打开excel表格
-        //System.out.println("cmd /c main.java.start " + news);
         try {
-            Runtime.getRuntime().exec("cmd /c main.java.start " + news);
+            Runtime.getRuntime().exec("cmd /c " + news);
         } catch (IOException e) {
             e.printStackTrace();
         }

@@ -13,7 +13,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<BorderPane prefHeight="330.0" prefWidth="430.0" styleClass="main_weighting" stylesheets="@../css/style.css" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="main.java.layout.WeighingController">
+<BorderPane prefHeight="330.0" prefWidth="430.0" styleClass="main_weighting" stylesheets="@../css/style.css" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="main.java.layout.WeightingController">
     <center>
         <AnchorPane fx:id="root" prefHeight="330.0" prefWidth="430.0" BorderPane.alignment="CENTER">
             <children>
@@ -49,6 +49,8 @@
                         <TableColumn prefWidth="125.0" text="备注" />
                     </columns>
                 </TableView>
+
+                <Label fx:id="nnns" text="Label" textFill="WHITE" AnchorPane.bottomAnchor="3.0" AnchorPane.rightAnchor="5.0" />
             </children>
         </AnchorPane>
     </center>

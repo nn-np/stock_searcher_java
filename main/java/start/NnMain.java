@@ -1,6 +1,7 @@
 package main.java.start;
 
 import main.java.layout.MainController;
+import main.java.layout.WeightingController;
 import main.java.listener.NnDragListener;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -35,6 +36,8 @@ public class NnMain extends Application {
             fxmlLoader = new FXMLLoader(getClass().getResource("/main/resources/fxml/weighing_layout.fxml"));
             root = fxmlLoader.load();
             scene = new Scene(root, 730, 430);
+            WeightingController controller = fxmlLoader.getController();
+            controller.setStage(primaryStage);
             primaryStage.setTitle("Weighting Management System");
         } else {// 其他打开查库存
             fxmlLoader = new FXMLLoader(getClass().getResource("/main/resources/fxml/main_layout.fxml"));

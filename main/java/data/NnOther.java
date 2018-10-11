@@ -1,5 +1,6 @@
 package main.java.data;
 
+import javafx.application.Platform;
 import main.java.layout.NnPopController;
 import main.java.listener.NnOnDragDropListener;
 import javafx.fxml.FXMLLoader;
@@ -84,8 +85,7 @@ public class NnOther {
         return value;
     }
 
-    // 弹出提示窗口
-    public void showInfo(String s, String info) {
+    private void toShowInfo(String s, String info) {
         FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/main/resources/fxml/pop_layout.fxml"));
         Parent root;
         try {
@@ -110,6 +110,11 @@ public class NnOther {
         stage.show();
     }
 
+    // 弹出提示窗口
+    public void showInfo(String s, String info) {
+        Platform.runLater(() -> toShowInfo(s, info));
+    }
+
     // 支持文件拖拽
     public void initDragDrop(Node root, NnOnDragDropListener listener) {
         root.setOnDragOver(event -> {
@@ -130,5 +135,9 @@ public class NnOther {
             event.setDropCompleted(true);
             event.consume();
         });
+    }
+
+    public String getVersion() {
+        return "v1.0.2 nnns 10.12";
     }
 }

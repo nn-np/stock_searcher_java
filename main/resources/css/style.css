@@ -35,6 +35,21 @@
     -fx-background-position: center center;
 }
 
+.bt_back {
+    -fx-background-image: url("/main/resources/image/back.png");
+    -fx-background-size: 24 24;
+    -fx-background-color: rgba(200, 200, 200, 0);
+    -fx-background-position: center center;
+}
+
+.bt_back:hover {
+    -fx-background-image: url("/main/resources/image/back2.png");
+    -fx-background-size: 24 24;
+    -fx-background-radius: 24;
+    -fx-background-color: rgba(255, 255, 255, 0.8);
+    -fx-background-position: center center;
+}
+
 .bt_main {
     -fx-border-radius: 12;
     -fx-border-width: 2;

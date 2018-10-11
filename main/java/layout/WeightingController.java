@@ -1,11 +1,16 @@
 package main.java.layout;
 
 import javafx.event.ActionEvent;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
+import javafx.stage.Stage;
 import main.java.data.*;
 import main.java.start.WeightingManager;
 import javafx.application.Platform;
@@ -25,7 +30,9 @@ import java.awt.datatransfer.UnsupportedFlavorException;
 import java.io.File;
 import java.io.IOException;
 
-public class WeighingController {
+public class WeightingController {
+    private Stage mStage;
+
     private NnOther mNnOther;
     private NnProperties mNnProperties;// 配置文件
     private WeightingManager mManager;// 数据提交控制类
@@ -41,8 +48,9 @@ public class WeighingController {
     public Button bt_submit;
     public TableView<WeightingInfo> w_tv;
     private CheckBox checkBox;
+    public Label nnns;
 
-    public WeighingController() {
+    public WeightingController() {
         mNnOther = new NnOther();
         mData = FXCollections.observableArrayList();
         try {
@@ -54,6 +62,8 @@ public class WeighingController {
         mManager = new WeightingManager();
         mManager.setData(mData);
         Platform.runLater(() -> {
+            nnns.setText(mNnOther.getVersion());
+
             mNnOther.initDragDrop(root, url -> {
                 String str = url.substring(url.lastIndexOf('.'));
                 if (str.equals(".xls") || str.equals(".xlsx")) {
@@ -90,6 +100,10 @@ public class WeighingController {
 
     }
 
+    public void setStage(Stage stage) {
+        mStage = stage;
+    }
+
     private String getClipboard() {
         String str = "";
         // 获取系统剪贴板
@@ -109,12 +123,12 @@ public class WeighingController {
         return str;
     }
 
-    public static void initTableView(TableView<WeightingInfo> w_tv,ObservableList<WeightingInfo> data) {
+    public static void initTableView(TableView<WeightingInfo> w_tv, ObservableList<WeightingInfo> data) {
         w_tv.getVisibleLeafColumn(0).setCellValueFactory(new PropertyValueFactory<>("date"));
         w_tv.getVisibleLeafColumn(1).setCellValueFactory(new PropertyValueFactory<>("orderId"));
         w_tv.getVisibleLeafColumn(2).setCellValueFactory(new PropertyValueFactory<>("quality"));
-        w_tv.getVisibleLeafColumn(3).setCellValueFactory(new PropertyValueFactory<>("a_purity"));
-        w_tv.getVisibleLeafColumn(4).setCellValueFactory(new PropertyValueFactory<>("a_mw"));
+        w_tv.getVisibleLeafColumn(3).setCellValueFactory(new PropertyValueFactory<>("purity"));
+        w_tv.getVisibleLeafColumn(4).setCellValueFactory(new PropertyValueFactory<>("mw"));
         w_tv.getVisibleLeafColumn(5).setCellValueFactory(new PropertyValueFactory<>("coordinate"));
         w_tv.getVisibleLeafColumn(6).setCellValueFactory(new PropertyValueFactory<>("packages"));
         w_tv.getVisibleLeafColumn(7).setCellValueFactory(new PropertyValueFactory<>("cause"));
@@ -150,14 +164,18 @@ public class WeighingController {
         }
     }
 
-    private void toBegin() {
+    public void toBegin() {
         bt_submit.setText("选择");
+        tArea_weight.setVisible(true);
+        tArea_weight.clear();
+        stockUrl = null;
+        w_tv.setVisible(false);
         hb_bottom.getChildren().remove(checkBox);
         submitFlg = 0;
     }
 
     private void outPut() {
-        new Thread(()->mManager.outPut(()->{
+        new Thread(() -> mManager.outPut(() -> {
             Platform.runLater(() -> bt_submit.setText("选择"));
             submitFlg = 0;
         })).start();
@@ -178,7 +196,7 @@ public class WeighingController {
         mData.clear();
         tArea_weight.setVisible(false);
         w_tv.setVisible(true);
-        mManager.search(str,() -> {
+        mManager.search(str, () -> {
             Platform.runLater(() -> bt_submit.setText("导出Excel表"));
             submitFlg = 2;
         });
@@ -216,7 +234,17 @@ public class WeighingController {
         mManager.outputCoo();
     }
 
-    // 标签操作，在本地操作
+    // 标签操作
     public void bu_tag(ActionEvent event) {
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/main/resources/fxml/label_layout.fxml"));
+        try {
+            Parent root = loader.load();
+            Scene scene = new Scene(root, 730, 430);
+            LabelController controller = loader.getController();
+            controller.setStage(mStage);
+            mStage.setScene(scene);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

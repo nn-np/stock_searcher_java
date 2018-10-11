@@ -48,5 +48,6 @@
          <image>
             <Image url="@../image/语文.png" />
          </image></ImageView>
+      <Label fx:id="nnns" text="Label" textFill="WHITE" AnchorPane.bottomAnchor="3.0" AnchorPane.rightAnchor="5.0" />
    </children>
 </AnchorPane>

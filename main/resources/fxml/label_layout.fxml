@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.text.Font?>
+
+<AnchorPane fx:id="root" prefHeight="400.0" prefWidth="600.0" styleClass="main_weighting" stylesheets="@../css/style.css" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="main.java.layout.LabelController">
+   <children>
+      <Label fx:id="label" alignment="TOP_CENTER" contentDisplay="CENTER" layoutX="281.0" layoutY="161.0" text="Ⅰ、拖动文件（excel txt）到此处" textAlignment="CENTER" textFill="WHITE" textOverrun="CENTER_ELLIPSIS" AnchorPane.bottomAnchor="95.0" AnchorPane.leftAnchor="45.0" AnchorPane.rightAnchor="45.0">
+         <font>
+            <Font size="24.0" />
+         </font></Label>
+      <HBox alignment="CENTER" AnchorPane.bottomAnchor="12.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
+         <children>
+            <Button fx:id="bt_start" maxWidth="90.0" minWidth="80.0" mnemonicParsing="false" onAction="#start" prefWidth="85.0" styleClass="bt_main" text="打开表格" textFill="#114764" />
+         </children>
+      </HBox>
+      <Button layoutY="6.0" maxHeight="24.0" maxWidth="24.0" minHeight="24.0" minWidth="24.0" mnemonicParsing="false" onAction="#back" prefHeight="24.0" prefWidth="24.0" styleClass="bt_back" AnchorPane.leftAnchor="5.0" AnchorPane.topAnchor="0.0" />
+      <Label fx:id="label2" alignment="TOP_LEFT" prefHeight="225.0" prefWidth="510.0" textFill="WHITE" AnchorPane.bottomAnchor="130.0" AnchorPane.leftAnchor="45.0" AnchorPane.rightAnchor="45.0" AnchorPane.topAnchor="45.0">
+         <font>
+            <Font size="18.0" />
+         </font></Label>
+      <Label fx:id="nnns" text="Label" textFill="WHITE" AnchorPane.bottomAnchor="3.0" AnchorPane.rightAnchor="5.0" />
+   </children>
+</AnchorPane>

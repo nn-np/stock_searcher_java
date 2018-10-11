@@ -9,7 +9,6 @@ import javax.xml.stream.XMLStreamException;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
@@ -441,7 +440,7 @@ public class WeightingManager {
                 e.printStackTrace();
             }
             try {
-                Runtime.getRuntime().exec("cmd /c start " + url1);
+                Runtime.getRuntime().exec("cmd /c " + url1);
             } catch (IOException e) {
                 e.printStackTrace();
             }
